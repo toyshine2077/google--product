@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import Login from './Login';
 import { 
   Home, 
   Megaphone, 
@@ -38,7 +39,11 @@ import {
   Info,
   History,
   Store,
-  FileText
+  FileText,
+  Edit3,
+  User,
+  Calendar,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -213,44 +218,82 @@ const TabItem = ({ label, active = false, onClick }: { label: string, active?: b
 
 // --- Pagination Component ---
 
-const Pagination = ({ total, pageSize = 5 }: { total: number, pageSize?: number }) => (
-  <div className="mt-4 flex items-center justify-between text-[11px] text-gray-500 px-4 py-3 border-t border-gray-100 bg-white">
-    <div className="flex items-center space-x-1">
-      <span>共</span>
-      <span className="font-medium text-gray-700">{total}</span>
-      <span>条</span>
-    </div>
-    <div className="flex items-center space-x-1.5">
-      <button className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" disabled>
-        <ChevronLeft size={14} />
-      </button>
-      <button className="w-7 h-7 flex items-center justify-center bg-blue-600 text-white rounded-md font-medium shadow-sm shadow-blue-200">1</button>
-      <button className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md hover:bg-gray-50 text-gray-600 transition-colors">2</button>
-      <button className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md hover:bg-gray-50 text-gray-600 transition-colors">3</button>
-      <button className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md hover:bg-gray-50 text-gray-600 transition-colors">4</button>
-      <button className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md hover:bg-gray-50 text-gray-600 transition-colors">5</button>
-      <button className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md hover:bg-gray-50 text-gray-600 transition-colors">6</button>
-      <span className="px-1 text-gray-300">...</span>
-      <button className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md hover:bg-gray-50 text-gray-600 transition-colors">824</button>
-      <button className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-        <ChevronRight size={14} />
-      </button>
-      
-      <div className="flex items-center ml-2 space-x-2">
-        <select className="border border-gray-200 rounded-md px-2 py-1 bg-white outline-none focus:border-blue-400 transition-colors cursor-pointer">
-          <option>{pageSize}条/页</option>
-          <option>10条/页</option>
-          <option>20条/页</option>
-        </select>
-        <div className="flex items-center space-x-1">
-          <span>跳转至</span>
-          <input type="text" className="w-9 border border-gray-200 rounded-md px-1 py-1 text-center outline-none focus:border-blue-400 transition-colors" defaultValue="1" />
-          <span>页</span>
+const Pagination = ({ total, pageSize = 5, currentPage, onPageChange }: { total: number, pageSize?: number, currentPage: number, onPageChange: (page: number) => void }) => {
+  const totalPages = Math.ceil(total / pageSize);
+  
+  const getPageNumbers = () => {
+    const pages = [];
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+    
+    if (endPage - startPage < 4) {
+      startPage = Math.max(1, endPage - 4);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
+  const pageNumbers = getPageNumbers();
+
+  return (
+    <div className="mt-4 flex items-center justify-between text-[11px] text-gray-500 px-4 py-3 border-t border-gray-100 bg-white">
+      <div className="flex items-center space-x-1">
+        <span>共</span>
+        <span className="font-medium text-gray-700">{total}</span>
+        <span>条</span>
+      </div>
+      <div className="flex items-center space-x-1.5">
+        <button 
+          className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" 
+          disabled={currentPage === 1}
+          onClick={() => onPageChange(currentPage - 1)}
+        >
+          <ChevronLeft size={14} />
+        </button>
+        
+        {pageNumbers.map((page) => (
+          <button 
+            key={page}
+            className={`w-7 h-7 flex items-center justify-center rounded-md font-medium transition-colors ${currentPage === page ? 'bg-blue-600 text-white shadow-sm shadow-blue-200' : 'border border-gray-200 hover:bg-gray-50 text-gray-600'}`}
+            onClick={() => onPageChange(page)}
+          >
+            {page}
+          </button>
+        ))}
+        
+        <button 
+          className="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
+        >
+          <ChevronRight size={14} />
+        </button>
+        
+        <div className="flex items-center ml-2 space-x-2">
+          <select className="border border-gray-200 rounded-md px-2 py-1 bg-white outline-none focus:border-blue-400 transition-colors cursor-pointer">
+            <option>{pageSize}条/页</option>
+          </select>
+          <div className="flex items-center space-x-1">
+            <span>跳转至</span>
+            <input 
+              type="text" 
+              className="w-9 border border-gray-200 rounded-md px-1 py-1 text-center outline-none focus:border-blue-400 transition-colors" 
+              value={currentPage} 
+              onChange={(e) => {
+                const p = parseInt(e.target.value);
+                if (!isNaN(p) && p >= 1 && p <= totalPages) onPageChange(p);
+              }}
+            />
+            <span>页</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // --- Variety Dimension View Component ---
 
@@ -443,7 +486,7 @@ const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: stri
               ))}
             </tbody>
           </table>
-          <Pagination total={4120} />
+          <Pagination total={4120} currentPage={1} onPageChange={(p) => console.log(p)} />
         </div>
       </div>
     </motion.div>
@@ -711,7 +754,7 @@ const ActivityDetailView = ({ id, onBack }: { id: string; onBack: () => void }) 
   );
 };
 
-const MyActivitiesView = ({ onDetailClick }: { onDetailClick: (id: string) => void }) => {
+const MyActivitiesView = ({ onDetailClick, onCreateClick }: { onDetailClick: (id: string) => void, onCreateClick: () => void }) => {
   const [activeMainTab, setActiveMainTab] = useState('带金活动');
   const [isFilterExpanded, setIsFilterExpanded] = useState(true);
 
@@ -966,7 +1009,7 @@ const MyActivitiesView = ({ onDetailClick }: { onDetailClick: (id: string) => vo
         {/* Action Buttons */}
         <div className="flex justify-between items-center">
           <div className="flex space-x-3">
-            <button className="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors flex items-center shadow-sm">
+            <button onClick={onCreateClick} className="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors flex items-center shadow-sm">
               <Plus size={14} className="mr-1.5" />
               代厂家建活动
             </button>
@@ -1084,7 +1127,7 @@ const MyActivitiesView = ({ onDetailClick }: { onDetailClick: (id: string) => vo
               </tbody>
             </table>
           </div>
-          <Pagination total={12785} pageSize={10} />
+          <Pagination total={12785} pageSize={10} currentPage={1} onPageChange={(p) => console.log(p)} />
         </div>
       </div>
     </div>
@@ -1331,6 +1374,2069 @@ const IncentiveDistributionView = () => {
 
 // --- Home View Component (Tabs) ---
 
+const BusinessSettingsView = () => {
+  const [activeTab, setActiveTab] = useState('订单配置');
+  const [publicIncentiveEnabled, setPublicIncentiveEnabled] = useState(false);
+  const [publicIncentiveTypes, setPublicIncentiveTypes] = useState<string[]>(['none']);
+  const [publicNonePaymentMethods, setPublicNonePaymentMethods] = useState<string[]>(['1/货到付款']);
+  const [publicCustomPaymentMethods, setPublicCustomPaymentMethods] = useState<string[]>([]);
+  const [publicCustomActivePaymentMethod, setPublicCustomActivePaymentMethod] = useState<string | null>(null);
+  const [publicPaymentModalType, setPublicPaymentModalType] = useState<'none' | 'custom' | null>(null);
+  
+  // Private Domain + Offline Retail Turnover States
+  const [privateIncentiveEnabled, setPrivateIncentiveEnabled] = useState(false);
+  const [privateIncentiveModes, setPrivateIncentiveModes] = useState<string[]>(['none']);
+  const [privateSelectedMemberLevels, setPrivateSelectedMemberLevels] = useState<string[]>([]);
+  const [privateNonePaymentMethods, setPrivateNonePaymentMethods] = useState<string[]>([]);
+  const [privateCustomPaymentMethods, setPrivateCustomPaymentMethods] = useState<string[]>([]);
+  const [privateCustomActivePaymentMethod, setPrivateCustomActivePaymentMethod] = useState<string | null>(null);
+  const [privatePaymentModalType, setPrivatePaymentModalType] = useState<'none' | 'custom' | null>(null);
+  const [showPrivatePaymentModal, setShowPrivatePaymentModal] = useState(false);
+  const [showPrivateMemberLevelModal, setShowPrivateMemberLevelModal] = useState(false);
+  const [showPrivateProductModal, setShowPrivateProductModal] = useState(false);
+  const [privateProductSearchCode, setPrivateProductSearchCode] = useState('');
+  const [privateProductPage, setPrivateProductPage] = useState(1);
+  const [privateConfiguredProducts, setPrivateConfiguredProducts] = useState<Array<{
+    code: string;
+    name: string;
+    spec: string;
+    barcode: string;
+    image: string;
+    ratio: string;
+    time: string;
+    paymentMethod: string;
+    isManual?: boolean;
+  }>>([]);
+
+  // Custom Incentive States (Public)
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [publicProductSearchCode, setPublicProductSearchCode] = useState('');
+  const [publicProductPage, setPublicProductPage] = useState(1);
+  const [configuredProducts, setConfiguredProducts] = useState<Array<{
+    code: string;
+    name: string;
+    spec: string;
+    barcode: string;
+    image: string;
+    ratio: string;
+    time: string;
+    paymentMethod: string;
+    isManual?: boolean;
+  }>>([]);
+
+  const [operationRecords, setOperationRecords] = useState([
+    { type: '员工黑名单', user: '666666_admin', content: '删除员工12414(压测员工门店单39223)', time: '2026-03-18 13:40:38' },
+    { type: '员工黑名单', user: '666666_admin', content: '新增员工12414(压测员工门店单39223)', time: '2026-03-18 13:40:37' },
+    { type: '看谁赚得多', user: '666666_admin', content: '参与排行类型：店员、店长、区域经理；参与排行门店：直营店、加盟店', time: '2026-03-18 13:40:27' },
+    { type: '目标完成情况', user: '666666_admin', content: '员工目标排行：目标量/销售目标、达成量/销售数量、达成率；门店目标排行：目标量/销售目标、达成量/销售数量、达成率；区域目标排行：目标量/销售目标、达成量/销售数量、达成率', time: '2026-03-18 13:34:13' },
+    { type: '员工提现', user: '666666_admin', content: '提现提醒金额：999999', time: '2026-03-18 13:34:07' },
+    { type: '早鸟首单时间变更', user: '666666_admin', content: '早鸟首单时间:null', time: '2026-03-18 13:33:20' },
+    { type: '私域+线下零售流水', user: '666666_admin', content: '开启；不激励渠道：按会员等级，1/普通卡；按付款方式，', time: '2026-03-18 13:33:20' },
+    { type: '订单预警', user: '666666_admin', content: '订单收益超额1500', time: '2026-03-18 13:33:20' },
+    { type: '公域订单激励', user: '666666_admin', content: '关闭；不激励渠道：按付款方式，1/货到付款', time: '2026-03-18 13:33:20' },
+    { type: '员工签约', user: '666666_admin', content: '从协议:20251113151117557/商品销售激励协议.pdf移除员工', time: '2026-03-18 13:32:17' },
+    { type: '员工签约', user: '666666_admin', content: '添加员工到协议:20251113151117557/商品销售激励协议.pdf', time: '2026-03-18 13:32:16' },
+    { type: '员工签约', user: '666666_admin', content: '启用协议:20251113151117557/商品销售激励协议.pdf', time: '2026-03-18 13:32:00' },
+    { type: '员工签约', user: '666666_admin', content: '作废协议:20251113151117557/商品销售激励协议.pdf', time: '2026-03-18 13:32:00' },
+    { type: '员工签约', user: '666666_admin', content: '是否开启员工签约:是', time: '2026-03-18 13:24:12' },
+    { type: '员工签约', user: '666666_admin', content: '修改附件1 2021年度个税汇算清缴申报APP操作指引.pdf员工税率配置 扣税门槛：1000 扣税税点：0.1 是否需要补录信息：需要', time: '2026-03-18 13:22:42' },
+    { type: '员工签约', user: '666666_admin', content: '关闭商品销售激励协议.pdf员工税率配置', time: '2026-03-18 13:19:35' },
+    { type: '员工签约', user: '666666_admin', content: '启用', time: '2026-03-18 13:19:35' },
+    { type: '连锁抽佣企业配置', user: '666666_admin', content: '删除企业：小周H2测试企业01，管理人：麦子180', time: '2026-03-18 13:17:57' },
+  ]);
+
+  const addOperationRecord = (type: string, content: string) => {
+    const now = new Date();
+    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    setOperationRecords(prev => [{
+      type,
+      user: '666666_admin',
+      content,
+      time: timeStr
+    }, ...prev]);
+  };
+
+  const handleAddProduct = (products: Array<{ code: string; ratio: string }>) => {
+    const now = new Date();
+    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    
+    const newProducts = products.map(p => ({
+      ...p,
+      name: p.code === '009726' ? '头孢（辅酶Q10胶囊）' : '肠炎宁片',
+      spec: p.code === '009726' ? '1g*6粒' : '0.24g*24片',
+      barcode: p.code === '009726' ? '6910728380619' : '6910728380618',
+      image: `https://picsum.photos/seed/${p.code}/80/80`,
+      time: timeStr,
+      paymentMethod: publicCustomActivePaymentMethod || '',
+      isManual: true
+    }));
+
+    setConfiguredProducts(prev => [...prev, ...newProducts]);
+    addOperationRecord('公域订单激励', `手动添加商品：${products.map(p => p.code).join(', ')}，付款方式：${publicCustomActivePaymentMethod}`);
+  };
+
+  const handleImportProducts = () => {
+    // Mock import
+    const mockImported = [
+      { code: '009726', ratio: '0.05' },
+      { code: 'IM002', ratio: '0.08' }
+    ];
+    const now = new Date();
+    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    
+    const newProducts = mockImported.map(p => ({
+      ...p,
+      name: p.code === '009726' ? '头孢（辅酶Q10胶囊）' : '肠炎宁片',
+      spec: p.code === '009726' ? '1g*6粒' : '0.24g*24片',
+      barcode: p.code === '009726' ? '6910728380619' : '6910728380618',
+      image: `https://picsum.photos/seed/${p.code}/80/80`,
+      time: timeStr,
+      paymentMethod: publicCustomActivePaymentMethod || '',
+      isManual: false
+    }));
+
+    setConfiguredProducts(prev => [...prev, ...newProducts]);
+    addOperationRecord('公域订单激励', `按模板导入商品：${mockImported.map(p => p.code).join(', ')}，付款方式：${publicCustomActivePaymentMethod}`);
+  };
+
+  const handleRemoveProduct = (code: string) => {
+    setConfiguredProducts(prev => prev.filter(p => p.code !== code || p.paymentMethod !== publicCustomActivePaymentMethod));
+    addOperationRecord('公域订单激励', `移除商品：${code}，付款方式：${publicCustomActivePaymentMethod}`);
+  };
+
+  const handleUpdateProductRatio = (code: string, newRatio: string) => {
+    setConfiguredProducts(prev => prev.map(p => 
+      (p.code === code && p.paymentMethod === publicCustomActivePaymentMethod) 
+        ? { ...p, ratio: newRatio } 
+        : p
+    ));
+    addOperationRecord('公域订单激励', `更新商品激励比例：${code}，比例：${newRatio}，付款方式：${publicCustomActivePaymentMethod}`);
+  };
+
+  const handleAddPrivateProduct = (products: Array<{ code: string; ratio: string }>) => {
+    const now = new Date();
+    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    
+    const newProducts = products.map(p => ({
+      ...p,
+      name: p.code === '009726' ? '头孢（辅酶Q10胶囊）' : '肠炎宁片',
+      spec: p.code === '009726' ? '1g*6粒' : '0.24g*24片',
+      barcode: p.code === '009726' ? '6910728380619' : '6910728380618',
+      image: `https://picsum.photos/seed/${p.code}/80/80`,
+      time: timeStr,
+      paymentMethod: privateCustomActivePaymentMethod || '',
+      isManual: true
+    }));
+
+    setPrivateConfiguredProducts(prev => [...prev, ...newProducts]);
+    addOperationRecord('私域+线下零售流水', `手动添加商品：${products.map(p => p.code).join(', ')}，付款方式：${privateCustomActivePaymentMethod}`);
+  };
+
+  const handleImportPrivateProducts = () => {
+    // Mock import
+    const mockImported = [
+      { code: '009726', ratio: '0.05' },
+      { code: 'IM002', ratio: '0.08' }
+    ];
+    const now = new Date();
+    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    
+    const newProducts = mockImported.map(p => ({
+      ...p,
+      name: p.code === '009726' ? '头孢（辅酶Q10胶囊）' : '肠炎宁片',
+      spec: p.code === '009726' ? '1g*6粒' : '0.24g*24片',
+      barcode: p.code === '009726' ? '6910728380619' : '6910728380618',
+      image: `https://picsum.photos/seed/${p.code}/80/80`,
+      time: timeStr,
+      paymentMethod: privateCustomActivePaymentMethod || '',
+      isManual: false
+    }));
+
+    setPrivateConfiguredProducts(prev => [...prev, ...newProducts]);
+    addOperationRecord('私域+线下零售流水', `按模板导入商品：${mockImported.map(p => p.code).join(', ')}，付款方式：${privateCustomActivePaymentMethod}`);
+  };
+
+  const handleRemovePrivateProduct = (code: string) => {
+    setPrivateConfiguredProducts(prev => prev.filter(p => p.code !== code || p.paymentMethod !== privateCustomActivePaymentMethod));
+    addOperationRecord('私域+线下零售流水', `移除商品：${code}，付款方式：${privateCustomActivePaymentMethod}`);
+  };
+
+  const handleUpdatePrivateProductRatio = (code: string, newRatio: string) => {
+    setPrivateConfiguredProducts(prev => prev.map(p => 
+      (p.code === code && p.paymentMethod === privateCustomActivePaymentMethod) 
+        ? { ...p, ratio: newRatio } 
+        : p
+    ));
+    addOperationRecord('私域+线下零售流水', `更新商品激励比例：${code}，比例：${newRatio}，付款方式：${privateCustomActivePaymentMethod}`);
+  };
+  
+  const tabs = [
+    '订单配置', '激励发放', '员工黑名单', '员工签约', '员工提现', '看谁赚得多', '连锁抽佣', '操作记录'
+  ];
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50 relative">
+      <div className="bg-white border-b border-gray-200 px-4 py-3">
+        <h2 className="text-base font-bold text-gray-800">业务配置</h2>
+      </div>
+      
+      <div className="bg-white px-4 border-b border-gray-200 flex items-center space-x-8">
+        {tabs.map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`py-3 px-1 text-sm font-medium transition-colors relative ${
+              activeTab === tab ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {tab}
+            {activeTab === tab && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
+            )}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-20">
+        {activeTab === '订单配置' && (
+          <>
+            {/* 订单预警 */}
+            <div className="bg-white rounded border border-gray-100 p-6 space-y-4 shadow-sm">
+              <h3 className="text-sm font-bold text-gray-800">订单预警</h3>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">订单收益超额：</span>
+                <input 
+                  type="text" 
+                  defaultValue="1500" 
+                  className="w-24 px-2 py-1 border border-gray-200 rounded text-sm text-gray-700 bg-gray-50/50 focus:outline-none focus:border-blue-400"
+                />
+                <span className="text-sm text-gray-600">元</span>
+              </div>
+              <p className="text-xs text-orange-400">
+                注：所有收益金额超过设置金额的激励订单将进入异常订单，需手动操作处理；不填写或填写0，不拦截订单；
+              </p>
+            </div>
+
+            {/* 公域订单激励 */}
+            <div className="bg-white rounded border border-gray-100 p-6 space-y-4 shadow-sm">
+              <h3 className="text-sm font-bold text-gray-800">公域订单激励</h3>
+              <div className="flex items-center space-x-6">
+                <span className="text-sm text-gray-600">是否开启：</span>
+                <div className="flex items-center space-x-4">
+                  <label 
+                    className="flex items-center space-x-1 cursor-pointer group"
+                    onClick={() => setPublicIncentiveEnabled(true)}
+                  >
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${publicIncentiveEnabled ? 'border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}>
+                      {publicIncentiveEnabled && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
+                    </div>
+                    <span className="text-sm text-gray-600">是</span>
+                  </label>
+                  <label 
+                    className="flex items-center space-x-1 cursor-pointer group"
+                    onClick={() => setPublicIncentiveEnabled(false)}
+                  >
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${!publicIncentiveEnabled ? 'border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}>
+                      {!publicIncentiveEnabled && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
+                    </div>
+                    <span className="text-sm text-gray-600">否</span>
+                  </label>
+                </div>
+              </div>
+              {!publicIncentiveEnabled && (
+                <p className="text-xs text-orange-400">
+                  注：选择否，您将关闭公域订单激励，所有公域订单的分享人将不会收到激励；
+                </p>
+              )}
+              
+              {publicIncentiveEnabled && (
+                <div className="space-y-4 pt-2 border-t border-gray-50">
+                  <div className="flex items-center space-x-4">
+                    <div 
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition-all ${
+                        publicIncentiveTypes.includes('none') 
+                          ? 'border-blue-600 bg-blue-50 text-blue-700' 
+                          : 'border-gray-200 hover:border-blue-300 text-gray-600'
+                      }`}
+                      onClick={() => setPublicIncentiveTypes(prev => prev.includes('none') ? prev.filter(t => t !== 'none') : [...prev, 'none'])}
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${publicIncentiveTypes.includes('none') ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
+                        {publicIncentiveTypes.includes('none') && <Check size={12} className="text-white" />}
+                      </div>
+                      <span className="text-sm font-medium">不激励渠道</span>
+                    </div>
+                    <div 
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition-all ${
+                        publicIncentiveTypes.includes('custom') 
+                          ? 'border-blue-600 bg-blue-50 text-blue-700' 
+                          : 'border-gray-200 hover:border-blue-300 text-gray-600'
+                      }`}
+                      onClick={() => setPublicIncentiveTypes(prev => prev.includes('custom') ? prev.filter(t => t !== 'custom') : [...prev, 'custom'])}
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${publicIncentiveTypes.includes('custom') ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
+                        {publicIncentiveTypes.includes('custom') && <Check size={12} className="text-white" />}
+                      </div>
+                      <span className="text-sm font-medium">自定义</span>
+                    </div>
+                  </div>
+                  
+                  {publicIncentiveTypes.includes('none') && (
+                    <div className="space-y-4 pt-4 border-t border-gray-50">
+                      <div className="space-y-1">
+                        <p className="text-xs text-orange-400">注：新增的付款方式编码类型的订单不获得激励；删除的付款方式编码类型的订单可以获得激励；注意：订单中的付款方式字段为空时，发激励；</p>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-sm text-gray-600">不激励渠道：</span>
+                        <span className="text-sm text-gray-600">按付款方式</span>
+                        <button 
+                          onClick={() => {
+                            setPublicPaymentModalType('none');
+                            setShowPaymentModal(true);
+                          }}
+                          className="text-blue-600 text-sm flex items-center hover:underline"
+                        >
+                          <Plus size={14} className="mr-0.5" />选择
+                        </button>
+                      </div>
+                      <div className="border border-gray-100 rounded p-3 bg-white min-h-[60px]">
+                        <div className="text-[10px] text-gray-400 mb-2">当前已选择：</div>
+                        <div className="flex flex-wrap gap-2">
+                          {publicNonePaymentMethods.length > 0 ? (
+                            publicNonePaymentMethods.map(pm => (
+                              <span key={pm} className="px-2 py-0.5 bg-gray-50 border border-gray-100 rounded text-xs text-gray-600">{pm}</span>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">暂未选择付款方式</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {publicIncentiveTypes.includes('custom') && (
+                    <div className="space-y-4 pt-4 border-t border-gray-50">
+                      <div className="space-y-1">
+                        <p className="text-xs text-orange-400">注：包含配置商品编码+付款方式的订单将根据配置比例计算商品激励；最终商品激励金额=原商品激励金额*商品激励比例；</p>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-sm text-gray-600">配置按付款方式：</span>
+                        <button 
+                          onClick={() => {
+                            setPublicPaymentModalType('custom');
+                            setShowPaymentModal(true);
+                          }}
+                          className="text-blue-600 text-sm flex items-center hover:underline"
+                        >
+                          <Plus size={14} className="mr-0.5" />选择付款方式
+                        </button>
+                      </div>
+                      <div className="border border-gray-100 rounded p-3 bg-white min-h-[60px]">
+                        <div className="text-[10px] text-gray-400 mb-2">当前已选择：</div>
+                        <div className="flex flex-wrap gap-2">
+                          {publicCustomPaymentMethods.length > 0 ? (
+                            publicCustomPaymentMethods.map(pm => (
+                              <button 
+                                key={pm}
+                                onClick={() => setPublicCustomActivePaymentMethod(pm)}
+                                className={`px-2 py-0.5 border rounded text-xs transition-colors ${
+                                  publicCustomActivePaymentMethod === pm 
+                                    ? 'bg-blue-600 border-blue-600 text-white' 
+                                    : 'bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-100'
+                                }`}
+                              >
+                                {pm}
+                              </button>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">暂未选择付款方式</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {publicCustomActivePaymentMethod && (
+                        <div className="space-y-4 pt-4 border-t border-gray-50">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-bold text-gray-700">商品激励配置 ({publicCustomActivePaymentMethod})</h4>
+                            <div className="flex items-center space-x-3">
+                              <div className="relative">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                <input 
+                                  type="text" 
+                                  placeholder="搜索商品编码" 
+                                  value={publicProductSearchCode}
+                                  onChange={(e) => setPublicProductSearchCode(e.target.value)}
+                                  className="pl-8 pr-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500 w-48"
+                                />
+                              </div>
+                              <button 
+                                onClick={handleImportProducts}
+                                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 text-gray-600"
+                              >
+                                按模板导入
+                              </button>
+                              <button 
+                                onClick={() => setShowProductModal(true)}
+                                className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                              >
+                                手动添加
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="border border-gray-100 rounded overflow-hidden">
+                            <table className="w-full text-sm text-left">
+                              <thead className="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                  <th className="px-4 py-2 font-medium text-gray-600">商品信息</th>
+                                  <th className="px-4 py-2 font-medium text-gray-600">商品激励比例</th>
+                                  <th className="px-4 py-2 font-medium text-gray-600">配置时间</th>
+                                  <th className="px-4 py-2 font-medium text-gray-600">操作</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200 bg-white">
+                                {configuredProducts
+                                  .filter(p => p.paymentMethod === publicCustomActivePaymentMethod && p.code.includes(publicProductSearchCode))
+                                  .slice((publicProductPage - 1) * 5, publicProductPage * 5)
+                                  .length > 0 ? (
+                                  configuredProducts
+                                    .filter(p => p.paymentMethod === publicCustomActivePaymentMethod && p.code.includes(publicProductSearchCode))
+                                    .slice((publicProductPage - 1) * 5, publicProductPage * 5)
+                                    .map((p, idx) => (
+                                    <tr key={idx}>
+                                      <td className="px-4 py-3">
+                                        <div className="flex items-center space-x-3">
+                                          <img src={p.image} alt="" className="w-12 h-12 rounded border border-gray-100 object-cover" referrerPolicy="no-referrer" />
+                                          <div className="space-y-0.5">
+                                            <div className="font-bold text-gray-800 text-sm">{p.name}</div>
+                                            <div className="text-[11px] text-gray-500">规格：{p.spec}</div>
+                                            <div className="text-[11px] text-gray-500">条形码：{p.barcode}</div>
+                                            <div className="text-[11px] text-gray-500">商品编码：{p.code}</div>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-3 text-gray-600">
+                                        <ProductRatioInput 
+                                          initialRatio={p.ratio} 
+                                          onSave={(newRatio) => handleUpdateProductRatio(p.code, newRatio)} 
+                                          isManual={p.isManual}
+                                        />
+                                      </td>
+                                      <td className="px-4 py-3 text-gray-600">{p.time}</td>
+                                      <td className="px-4 py-3">
+                                        <button 
+                                          onClick={() => handleRemoveProduct(p.code)}
+                                          className="text-red-500 hover:text-red-600"
+                                        >
+                                          移除
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400">暂无配置商品</td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                          <Pagination 
+                            total={configuredProducts.filter(p => p.paymentMethod === publicCustomActivePaymentMethod && p.code.includes(publicProductSearchCode)).length} 
+                            pageSize={5} 
+                            currentPage={publicProductPage}
+                            onPageChange={setPublicProductPage}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* 私域+线下零售流水 */}
+            <div className="bg-white rounded border border-gray-100 p-6 space-y-4 shadow-sm">
+              <h3 className="text-sm font-bold text-gray-800">私域+线下零售流水</h3>
+              <div className="flex items-center space-x-6">
+                <span className="text-sm text-gray-600">是否开启：</span>
+                <div className="flex items-center space-x-4">
+                  <label 
+                    className="flex items-center space-x-1 cursor-pointer group"
+                    onClick={() => {
+                      setPrivateIncentiveEnabled(true);
+                      addOperationRecord('私域+线下零售流水', '开启');
+                    }}
+                  >
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${privateIncentiveEnabled ? 'border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}>
+                      {privateIncentiveEnabled && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
+                    </div>
+                    <span className="text-sm text-gray-600">是</span>
+                  </label>
+                  <label 
+                    className="flex items-center space-x-1 cursor-pointer group"
+                    onClick={() => {
+                      setPrivateIncentiveEnabled(false);
+                      addOperationRecord('私域+线下零售流水', '关闭');
+                    }}
+                  >
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${!privateIncentiveEnabled ? 'border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}>
+                      {!privateIncentiveEnabled && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
+                    </div>
+                    <span className="text-sm text-gray-600">否</span>
+                  </label>
+                </div>
+              </div>
+              {privateIncentiveEnabled ? (
+                <p className="text-xs text-orange-400">
+                  注：选择是，您将开启私域+线下零售流水，所有微商城+线下零售订单的分享人将收到激励；
+                </p>
+              ) : (
+                <p className="text-xs text-orange-400">
+                  注：选择否，您将关闭私域+线下零售流水，所有微商城+线下零售订单的分享人将不会收到激励；
+                </p>
+              )}
+              
+              {privateIncentiveEnabled && (
+                <div className="space-y-6 pt-4 border-t border-gray-50">
+                  <div className="flex items-center space-x-4">
+                    <div 
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition-all ${
+                        privateIncentiveModes.includes('none') 
+                          ? 'border-blue-600 bg-blue-50 text-blue-700' 
+                          : 'border-gray-200 hover:border-blue-300 text-gray-600'
+                      }`}
+                      onClick={() => setPrivateIncentiveModes(prev => prev.includes('none') ? prev.filter(t => t !== 'none') : [...prev, 'none'])}
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${privateIncentiveModes.includes('none') ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
+                        {privateIncentiveModes.includes('none') && <Check size={12} className="text-white" />}
+                      </div>
+                      <span className="text-sm font-medium">不激励渠道</span>
+                    </div>
+                    <div 
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition-all ${
+                        privateIncentiveModes.includes('custom') 
+                          ? 'border-blue-600 bg-blue-50 text-blue-700' 
+                          : 'border-gray-200 hover:border-blue-300 text-gray-600'
+                      }`}
+                      onClick={() => setPrivateIncentiveModes(prev => prev.includes('custom') ? prev.filter(t => t !== 'custom') : [...prev, 'custom'])}
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${privateIncentiveModes.includes('custom') ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
+                        {privateIncentiveModes.includes('custom') && <Check size={12} className="text-white" />}
+                      </div>
+                      <span className="text-sm font-medium">自定义</span>
+                    </div>
+                  </div>
+
+                  {privateIncentiveModes.includes('none') && (
+                    <div className="space-y-4 pt-4 border-t border-gray-50">
+                      <div className="space-y-2">
+                        <div className="space-y-1">
+                          <p className="text-xs text-orange-400">注：展示新增的等级权益类型的订单不获得激励；删除的等级权益类型的订单获得激励；注意：订单中的会员等级字段为空时，发激励；</p>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <span className="text-sm text-gray-600">不激励渠道：</span>
+                          <span className="text-sm text-gray-600">按会员等级</span>
+                          <button 
+                            onClick={() => setShowPrivateMemberLevelModal(true)}
+                            className="text-blue-600 text-sm flex items-center hover:underline"
+                          >
+                            <Plus size={14} className="mr-0.5" />选择
+                          </button>
+                        </div>
+                        <div className="border border-gray-100 rounded p-3 bg-white min-h-[60px]">
+                          <div className="text-[10px] text-gray-400 mb-2">当前已选择：</div>
+                          <div className="flex flex-wrap gap-2">
+                            {privateSelectedMemberLevels.length > 0 ? (
+                              privateSelectedMemberLevels.map(level => (
+                                <span key={level} className="px-2 py-0.5 bg-gray-50 border border-gray-100 rounded text-xs text-gray-600">{level}</span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-gray-400 italic">暂未选择会员等级</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="space-y-1">
+                          <p className="text-xs text-orange-400">注：新增的付款方式编码类型的订单不获得激励；删除的付款方式编码类型的订单可以获得激励；注意：订单中的付款方式字段为空时，发激励；</p>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <span className="text-sm text-gray-600">不激励渠道：</span>
+                          <span className="text-sm text-gray-600">按付款方式</span>
+                          <button 
+                            onClick={() => {
+                              setPrivatePaymentModalType('none');
+                              setShowPrivatePaymentModal(true);
+                            }}
+                            className="text-blue-600 text-sm flex items-center hover:underline"
+                          >
+                            <Plus size={14} className="mr-0.5" />选择
+                          </button>
+                        </div>
+                        <div className="border border-gray-100 rounded p-3 bg-white min-h-[60px]">
+                          <div className="text-[10px] text-gray-400 mb-2">当前已选择：</div>
+                          <div className="flex flex-wrap gap-2">
+                            {privateNonePaymentMethods.length > 0 ? (
+                              privateNonePaymentMethods.map(pm => (
+                                <span key={pm} className="px-2 py-0.5 bg-gray-50 border border-gray-100 rounded text-xs text-gray-600">{pm}</span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-gray-400 italic">暂未选择付款方式</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {privateIncentiveModes.includes('custom') && (
+                    <div className="space-y-4 pt-4 border-t border-gray-50">
+                      <div className="space-y-1">
+                        <p className="text-xs text-orange-400">注：包含配置商品编码+付款方式的订单将根据配置比例计算商品激励；最终商品激励金额=原商品激励金额*商品激励比例；</p>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-sm text-gray-600">配置按付款方式：</span>
+                        <button 
+                          onClick={() => {
+                            setPrivatePaymentModalType('custom');
+                            setShowPrivatePaymentModal(true);
+                          }}
+                          className="text-blue-600 text-sm flex items-center hover:underline"
+                        >
+                          <Plus size={14} className="mr-0.5" />选择付款方式
+                        </button>
+                      </div>
+                      <div className="border border-gray-100 rounded p-3 bg-white min-h-[60px]">
+                        <div className="text-[10px] text-gray-400 mb-2">当前已选择：</div>
+                        <div className="flex flex-wrap gap-2">
+                          {privateCustomPaymentMethods.length > 0 ? (
+                            privateCustomPaymentMethods.map(pm => (
+                              <button 
+                                key={pm}
+                                onClick={() => setPrivateCustomActivePaymentMethod(pm)}
+                                className={`px-2 py-0.5 border rounded text-xs transition-colors ${
+                                  privateCustomActivePaymentMethod === pm 
+                                    ? 'bg-blue-600 border-blue-600 text-white' 
+                                    : 'bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-100'
+                                }`}
+                              >
+                                {pm}
+                              </button>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">暂未选择付款方式</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {privateCustomActivePaymentMethod && (
+                        <div className="space-y-4 pt-4 border-t border-gray-50">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-bold text-gray-700">商品激励配置 ({privateCustomActivePaymentMethod})</h4>
+                            <div className="flex items-center space-x-3">
+                              <div className="relative">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                <input 
+                                  type="text" 
+                                  placeholder="搜索商品编码" 
+                                  value={privateProductSearchCode}
+                                  onChange={(e) => setPrivateProductSearchCode(e.target.value)}
+                                  className="pl-8 pr-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500 w-48"
+                                />
+                              </div>
+                              <button 
+                                onClick={handleImportPrivateProducts}
+                                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 text-gray-600"
+                              >
+                                按模板导入
+                              </button>
+                              <button 
+                                onClick={() => setShowPrivateProductModal(true)}
+                                className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                              >
+                                手动添加
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="border border-gray-100 rounded overflow-hidden">
+                            <table className="w-full text-sm text-left">
+                              <thead className="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                  <th className="px-4 py-2 font-medium text-gray-600">商品信息</th>
+                                  <th className="px-4 py-2 font-medium text-gray-600">商品激励比例</th>
+                                  <th className="px-4 py-2 font-medium text-gray-600">配置时间</th>
+                                  <th className="px-4 py-2 font-medium text-gray-600">操作</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200 bg-white">
+                                {privateConfiguredProducts
+                                  .filter(p => p.paymentMethod === privateCustomActivePaymentMethod && p.code.includes(privateProductSearchCode))
+                                  .slice((privateProductPage - 1) * 5, privateProductPage * 5)
+                                  .length > 0 ? (
+                                  privateConfiguredProducts
+                                    .filter(p => p.paymentMethod === privateCustomActivePaymentMethod && p.code.includes(privateProductSearchCode))
+                                    .slice((privateProductPage - 1) * 5, privateProductPage * 5)
+                                    .map((p, idx) => (
+                                    <tr key={idx}>
+                                      <td className="px-4 py-3">
+                                        <div className="flex items-center space-x-3">
+                                          <img src={p.image} alt="" className="w-12 h-12 rounded border border-gray-100 object-cover" referrerPolicy="no-referrer" />
+                                          <div className="space-y-0.5">
+                                            <div className="font-bold text-gray-800 text-sm">{p.name}</div>
+                                            <div className="text-[11px] text-gray-500">规格：{p.spec}</div>
+                                            <div className="text-[11px] text-gray-500">条形码：{p.barcode}</div>
+                                            <div className="text-[11px] text-gray-500">商品编码：{p.code}</div>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-3 text-gray-600">
+                                        <ProductRatioInput 
+                                          initialRatio={p.ratio} 
+                                          onSave={(newRatio) => handleUpdatePrivateProductRatio(p.code, newRatio)} 
+                                          isManual={p.isManual}
+                                        />
+                                      </td>
+                                      <td className="px-4 py-3 text-gray-600">{p.time}</td>
+                                      <td className="px-4 py-3">
+                                        <button 
+                                          onClick={() => handleRemovePrivateProduct(p.code)}
+                                          className="text-red-500 hover:text-red-600"
+                                        >
+                                          移除
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td colSpan={4} className="px-4 py-8 text-center text-gray-400">暂无配置商品</td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                          <Pagination 
+                            total={privateConfiguredProducts.filter(p => p.paymentMethod === privateCustomActivePaymentMethod && p.code.includes(privateProductSearchCode)).length} 
+                            pageSize={5} 
+                            currentPage={privateProductPage}
+                            onPageChange={setPrivateProductPage}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* 早鸟活动 */}
+            <div className="bg-white rounded border border-gray-100 p-6 space-y-4 shadow-sm">
+              <h3 className="text-sm font-bold text-gray-800">早鸟活动</h3>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">首单奖励活动开始时间：每日 16 点</span>
+              </div>
+              <p className="text-xs text-orange-400">
+                注:后续的早鸟类型的配置都默认该配置
+              </p>
+            </div>
+          </>
+        )}
+
+        {activeTab === '激励发放' && (
+          <>
+            {/* 激励发放 */}
+            <div className="bg-white rounded border border-gray-100 p-6 space-y-4 shadow-sm">
+              <h3 className="text-sm font-bold text-gray-800">激励发放</h3>
+              <div className="flex items-center space-x-6">
+                <span className="text-sm text-gray-600">是否开启：</span>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center space-x-1 cursor-pointer group">
+                    <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center group-hover:border-blue-400">
+                      <div className="w-2 h-2 rounded-full bg-transparent"></div>
+                    </div>
+                    <span className="text-sm text-gray-600">是</span>
+                  </label>
+                  <label className="flex items-center space-x-1 cursor-pointer group">
+                    <div className="w-4 h-4 rounded-full border border-blue-600 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                    </div>
+                    <span className="text-sm text-gray-600">否</span>
+                  </label>
+                </div>
+              </div>
+              <p className="text-xs text-orange-400">
+                注：开启状态下，将过滤无店长门店激励不进异常订单，跳过店长激励不发，其他激励正常发放；已发放的激励订单，后续店长激励无法补发；
+              </p>
+            </div>
+
+            {/* 待入账显示 */}
+            <div className="bg-white rounded border border-gray-100 p-6 space-y-4 shadow-sm">
+              <h3 className="text-sm font-bold text-gray-800">待入账显示</h3>
+              <div className="flex items-center space-x-6">
+                <span className="text-sm text-gray-600">员工端小程序是否显示待入账：</span>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center space-x-1 cursor-pointer group">
+                    <div className="w-4 h-4 rounded-full border border-blue-600 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                    </div>
+                    <span className="text-sm text-gray-600">显示</span>
+                  </label>
+                  <label className="flex items-center space-x-1 cursor-pointer group">
+                    <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center group-hover:border-blue-400">
+                      <div className="w-2 h-2 rounded-full bg-transparent"></div>
+                    </div>
+                    <span className="text-sm text-gray-600">不显示</span>
+                  </label>
+                </div>
+              </div>
+              <p className="text-xs text-orange-400">
+                注：设置不显示时，随心看员工端小程序中将隐藏所有待入账数据展示
+              </p>
+            </div>
+
+            {/* 发放规则 */}
+            <div className="bg-white rounded border border-gray-100 p-6 space-y-4 shadow-sm">
+              <h3 className="text-sm font-bold text-gray-800">发放规则</h3>
+              <div className="flex items-center space-x-6">
+                <span className="text-sm text-gray-600">发放周期：</span>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center space-x-1 cursor-pointer group">
+                    <div className="w-4 h-4 rounded-full border border-blue-600 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                    </div>
+                    <span className="text-sm text-gray-600">实时发放</span>
+                  </label>
+                  <label className="flex items-center space-x-1 cursor-pointer group">
+                    <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center group-hover:border-blue-400">
+                      <div className="w-2 h-2 rounded-full bg-transparent"></div>
+                    </div>
+                    <span className="text-sm text-gray-600">按月发放</span>
+                  </label>
+                </div>
+              </div>
+              <p className="text-xs text-orange-400">
+                注：实时发放指订单确认收货后立即发放激励；按月发放指每月固定日期统一发放上月激励；
+              </p>
+            </div>
+          </>
+        )}
+
+        {activeTab === '员工黑名单' && (
+          <div className="flex flex-col h-full bg-white">
+            {/* Toolbar */}
+            <div className="p-4 flex justify-between items-center border-b border-gray-50">
+              <div className="flex items-center space-x-2">
+                <button className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors">
+                  添加员工
+                </button>
+                <div className="relative group">
+                  <button className="px-3 py-1.5 border border-blue-600 text-blue-600 rounded text-sm flex items-center hover:bg-blue-50">
+                    导入 <ChevronDown size={14} className="ml-1" />
+                  </button>
+                </div>
+                <div className="relative group">
+                  <button className="px-3 py-1.5 border border-blue-600 text-blue-600 rounded text-sm flex items-center hover:bg-blue-50">
+                    导出 <ChevronDown size={14} className="ml-1" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="relative group">
+                  <button className="px-3 py-1.5 border border-blue-600 text-blue-600 rounded text-sm flex items-center hover:bg-blue-50">
+                    批量导入移除 <ChevronDown size={14} className="ml-1" />
+                  </button>
+                </div>
+                <button className="px-4 py-1.5 border border-gray-200 text-gray-400 rounded text-sm cursor-not-allowed">
+                  移除
+                </button>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="flex-1 overflow-auto no-scrollbar">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-gray-50 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-4 py-3 w-10">
+                      <input type="checkbox" className="rounded border-gray-300" />
+                    </th>
+                    <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">员工信息</th>
+                    <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">所属机构</th>
+                    <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">角色</th>
+                    <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">加入时间</th>
+                    <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {[
+                    { id: '1', name: '批量导入随心看角色13', empId: '020713', phone: '17678790011', org: '上海海典集团', role: '老板', joinTime: '2025-07-23 23:45:04' },
+                    { id: '2', name: '批量导入随心看角色10', empId: '020710', phone: '17678790008', org: '上海海典集团', role: '店员', joinTime: '2025-07-23 23:45:04' },
+                    { id: '3', name: '随心看老板', empId: '19118927263', phone: '19118927263', org: '海典智慧药房双品汇店(直营)', role: '老板', joinTime: '2025-07-23 23:45:04' },
+                    { id: '4', name: '小周自动化员工账户92633', empId: '1709614917226', phone: '17670792633', org: '上海海典集团', role: '', joinTime: '2025-07-23 23:45:04' },
+                    { id: '5', name: '小周自动化16761', empId: '1690003824994', phone: '17670716761', org: '上海海典集团', role: '', joinTime: '2025-07-23 23:45:04' },
+                    { id: '6', name: '海典101457', empId: '101457', phone: '-', org: '上海海典集团', role: '', joinTime: '2025-07-23 23:45:04' },
+                    { id: '7', name: '彭晓珍', empId: '1225', phone: '13975864810', org: '江药集团山东有限公司', role: '', joinTime: '2025-07-23 23:45:04' },
+                    { id: '8', name: '李文捷', empId: '2015', phone: '17788777643', org: '海典总部仓库', role: '管理员', joinTime: '2025-07-23 23:45:04' },
+                    { id: '9', name: '测试张三', empId: '23981', phone: '13145670939', org: '海典智慧药房吴云康汇店', role: '', joinTime: '2025-07-23 23:45:04' },
+                    { id: '10', name: '筱雨12', empId: '2233', phone: '13525554554', org: '1', role: '', joinTime: '2025-07-23 23:45:04' },
+                    { id: '11', name: 'zmz', empId: '1504', phone: '-', org: '海典智慧药房双品汇店(直营)', role: '运营', joinTime: '2025-07-23 23:45:04' },
+                  ].map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-4">
+                        <input type="checkbox" className="rounded border-gray-300" />
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs overflow-hidden">
+                            {item.name === '随心看老板' ? (
+                              <img src="https://picsum.photos/seed/avatar/32/32" alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <UserPlus size={16} />
+                            )}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-800">{item.name}</div>
+                            <div className="text-[10px] text-gray-400">员工编号：{item.empId}</div>
+                            <div className="text-[10px] text-gray-400">手机号：{item.phone}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-600">{item.org}</td>
+                      <td className="px-4 py-4 text-sm text-gray-600">{item.role || '-'}</td>
+                      <td className="px-4 py-4 text-sm text-gray-600">{item.joinTime}</td>
+                      <td className="px-4 py-4">
+                        <button className="text-sm text-blue-600 hover:underline">移除黑名单</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === '员工签约' && (
+          <div className="flex flex-col h-full bg-gray-50 overflow-auto no-scrollbar pb-10">
+            {/* 1. Enable Signing Toggle */}
+            <div className="bg-white p-4 mb-4 flex items-center border-b border-gray-100">
+              <span className="text-sm text-gray-700 mr-4">是否开启签约</span>
+              <button className="w-10 h-5 bg-blue-600 rounded-full relative transition-colors">
+                <div className="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" />
+              </button>
+            </div>
+
+            {/* 2. Agreement Management */}
+            <div className="bg-white p-4 mb-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-gray-800">协议管理</h3>
+              </div>
+              <div className="flex items-center space-x-2 mb-4">
+                <button className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded text-sm hover:bg-blue-100 transition-colors">
+                  新增协议
+                </button>
+                <span className="text-xs text-gray-400">*注：请上传纸张大小：A4的pdf文件</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[1000px]">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">协议使用模块</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">协议号</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">协议名称</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">上传时间</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">上传人</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">协议状态</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">员工税率配置</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">员工列表</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {[
+                      { module: '员工签约', id: '20251113151117557', name: '商品销售激励协议.pdf', time: '2025-11-13 15:11:17', user: '666666_admin', status: '正常', tax: true },
+                      { module: '员工签约', id: '20251113151054148', name: '00 斗拱平台综合支付服务协议-湖北天和堂.pdf', time: '2025-11-13 15:10:54', user: '666666_admin', status: '无效', tax: false },
+                      { module: '员工签约', id: '20250617130045571', name: '员工签约2025-06-17.pdf', time: '2025-06-17 13:00:45', user: '666666_admin', status: '正常', tax: false },
+                      { module: '员工签约', id: '20250616130012895', name: '员工签约2025-06-16.pdf', time: '2025-06-16 13:00:12', user: '666666_admin', status: '正常', tax: false },
+                      { module: '员工签约', id: '20250616130012559', name: '员工签约2025-06-16.pdf', time: '2025-06-16 13:00:12', user: '666666_admin', status: '无效', tax: false },
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 text-xs">
+                        <td className="px-4 py-3 text-gray-600">{row.module}</td>
+                        <td className="px-4 py-3 text-gray-600">{row.id}</td>
+                        <td className="px-4 py-3 text-blue-600 hover:underline cursor-pointer">{row.name}</td>
+                        <td className="px-4 py-3 text-gray-600">{row.time}</td>
+                        <td className="px-4 py-3 text-gray-600">{row.user}</td>
+                        <td className="px-4 py-3">
+                          <span className={`flex items-center ${row.status === '正常' ? 'text-green-500' : 'text-gray-400'}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${row.status === '正常' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                            {row.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center space-x-2">
+                            <button className={`w-8 h-4 rounded-full relative transition-colors ${row.tax ? 'bg-blue-600' : 'bg-gray-200'}`}>
+                              <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-all ${row.tax ? 'right-0.5' : 'left-0.5'}`} />
+                            </button>
+                            <span className="text-gray-300">|</span>
+                            <button className="text-blue-600 hover:underline">管理</button>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-blue-600 hover:underline cursor-pointer">共0人</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center space-x-2">
+                            <button className="text-blue-600 hover:underline">{row.status === '正常' ? '作废' : '启用'}</button>
+                            <button className="text-blue-600 hover:underline">管理</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {/* Pagination */}
+              <div className="flex justify-end items-center mt-4 space-x-2 text-xs text-gray-500">
+                <span>共 6 条</span>
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50"><ChevronLeft size={14} /></button>
+                <button className="px-2 py-1 border border-blue-600 text-blue-600 rounded bg-blue-50">1</button>
+                <button className="px-2 py-1 border border-gray-200 rounded hover:bg-gray-50">2</button>
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50"><ChevronRight size={14} /></button>
+                <select className="border border-gray-200 rounded px-1 py-0.5">
+                  <option>5条/页</option>
+                </select>
+                <span>跳转至</span>
+                <input type="text" className="w-8 border border-gray-200 rounded px-1 py-0.5 text-center" defaultValue="1" />
+                <span>页</span>
+              </div>
+            </div>
+
+            {/* 3. Employee Signing List */}
+            <div className="bg-white p-4 mb-4">
+              <h3 className="text-sm font-bold text-gray-800 mb-4">员工签约名单</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center border border-gray-200 rounded px-2 py-1.5 focus-within:border-blue-500 transition-colors">
+                    <span className="text-xs text-gray-400 mr-2">员工信息</span>
+                    <input type="text" placeholder="请输入员工姓名/编码" className="text-xs outline-none w-40" />
+                  </div>
+                  <button className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">查询</button>
+                  <button className="px-3 py-1.5 border border-blue-600 text-blue-600 rounded text-sm flex items-center hover:bg-blue-50">
+                    导出 <ChevronDown size={14} className="ml-1" />
+                  </button>
+                </div>
+                <button className="px-3 py-1.5 border border-blue-600 text-blue-600 rounded text-sm flex items-center hover:bg-blue-50">
+                  批量下载 <ChevronDown size={14} className="ml-1" />
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[1500px]">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">员工信息</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">证件类型</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">证件号码</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">国籍(地区)</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">性别</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">出生日期</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">任职受雇从业类型</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">任职受雇从业日期</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">所属机构</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">角色</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">签约时间</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">协议号</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">签订协议</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {[
+                      { name: '随心看店长', empId: '1503', phone: '13873174117', idType: '身份证', idNo: '4301**********4026', country: '中国', gender: '女', birth: '2026-01-19', type: '雇员', date: '2026-01-19', org: '海典智慧药房双品汇店(直营)', role: '店长', time: '2025-04-30 00:14:29', agreement: '20250429233106698' },
+                      { name: '随心看店长', empId: '150305', phone: '-', idType: '-', idNo: '-', country: '-', gender: '-', birth: '-', type: '-', date: '-', org: '海典智慧药房双品汇店(直营)', role: '店长', time: '2025-04-29 23:54:12', agreement: '20250429233106698' },
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 text-xs">
+                        <td className="px-4 py-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 overflow-hidden">
+                              <User size={16} />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-800">{row.name}</div>
+                              <div className="text-[10px] text-gray-400">员工昵称：6......子账号</div>
+                              <div className="text-[10px] text-gray-400">员工编号：{row.empId}</div>
+                              <div className="text-[10px] text-gray-400">手机号：{row.phone}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-gray-600">{row.idType}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.idNo}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.country}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.gender}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.birth}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.type}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.date}</td>
+                        <td className="px-4 py-4 text-gray-600 max-w-[150px] truncate">{row.org}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.role}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.time}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.agreement}</td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center space-x-2">
+                            <button className="text-blue-600 hover:underline">查看</button>
+                            <button className="text-blue-600 hover:underline">下载</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {/* Pagination */}
+              <div className="flex justify-end items-center mt-4 space-x-2 text-xs text-gray-500">
+                <span>共 2 条</span>
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50"><ChevronLeft size={14} /></button>
+                <button className="px-2 py-1 border border-blue-600 text-blue-600 rounded bg-blue-50">1</button>
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50"><ChevronRight size={14} /></button>
+                <select className="border border-gray-200 rounded px-1 py-0.5">
+                  <option>5条/页</option>
+                </select>
+                <span>跳转至</span>
+                <input type="text" className="w-8 border border-gray-200 rounded px-1 py-0.5 text-center" defaultValue="1" />
+                <span>页</span>
+              </div>
+            </div>
+
+            {/* 4. Employee Personal Tax Report */}
+            <div className="bg-white p-4">
+              <h3 className="text-sm font-bold text-gray-800 mb-4">员工个税报表</h3>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="flex items-center border border-gray-200 rounded px-2 py-1.5 focus-within:border-blue-500 transition-colors">
+                  <span className="text-xs text-gray-400 mr-2">员工信息</span>
+                  <input type="text" placeholder="请输入员工姓名/编码" className="text-xs outline-none w-40" />
+                </div>
+                <div className="flex items-center border border-gray-200 rounded px-2 py-1.5 focus-within:border-blue-500 transition-colors">
+                  <span className="text-xs text-gray-400 mr-2">时间</span>
+                  <input type="text" defaultValue="2026-03" className="text-xs outline-none w-24" />
+                  <Calendar size={14} className="text-gray-400 ml-1" />
+                </div>
+                <button className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">查询</button>
+                <button className="px-3 py-1.5 border border-blue-600 text-blue-600 rounded text-sm flex items-center hover:bg-blue-50">
+                  导出 <ChevronDown size={14} className="ml-1" />
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[1500px]">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">员工信息</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">证件类型</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">证件号码</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">国籍(地区)</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">性别</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">出生日期</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">任职受雇从业类型</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">任职受雇从业日期</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">所属机构</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">手机号码</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">提现金额</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">员工扣税金额</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {[
+                      { name: '随心看店长', empId: '1503', phone: '13873174117', idType: '身份证', idNo: '4301**********4026', country: '中国', gender: '女', birth: '2026-01-19', type: '雇员', date: '2026-01-19', org: '海典智慧药房双品汇店(直营)', withdraw: '0.02元', tax: '0元' },
+                      { name: '随心看店长', empId: '150305', phone: '-', idType: '-', idNo: '-', country: '-', gender: '-', birth: '-', type: '-', date: '-', org: '海典智慧药房双品汇店(直营)', withdraw: '0元', tax: '0元' },
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 text-xs">
+                        <td className="px-4 py-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 overflow-hidden">
+                              <User size={16} />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-800">{row.name}</div>
+                              <div className="text-[10px] text-gray-400">员工昵称：6......子账号</div>
+                              <div className="text-[10px] text-gray-400">员工编号：{row.empId}</div>
+                              <div className="text-[10px] text-gray-400">手机号：{row.phone}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-gray-600">{row.idType}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.idNo}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.country}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.gender}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.birth}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.type}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.date}</td>
+                        <td className="px-4 py-4 text-gray-600 max-w-[150px] truncate">{row.org}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.phone}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.withdraw}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.tax}</td>
+                        <td className="px-4 py-4">
+                          <button className="text-blue-600 hover:underline">查看</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeTab === '员工提现' && (
+          <div className="flex flex-col h-full bg-gray-50 overflow-auto no-scrollbar pb-10">
+            {/* 1. Withdrawal Switch */}
+            <div className="bg-white rounded border border-gray-100 p-6 mb-4 shadow-sm space-y-4">
+              <h3 className="text-sm font-bold text-gray-800">提现开关</h3>
+              <div className="flex items-center space-x-6">
+                <span className="text-sm text-gray-600">是否开启提现：</span>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center space-x-1 cursor-pointer group">
+                    <div className="w-4 h-4 rounded-full border border-blue-600 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                    </div>
+                    <span className="text-sm text-gray-600">是</span>
+                  </label>
+                  <label className="flex items-center space-x-1 cursor-pointer group">
+                    <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center group-hover:border-blue-400">
+                      <div className="w-2 h-2 rounded-full bg-transparent"></div>
+                    </div>
+                    <span className="text-sm text-gray-600">否</span>
+                  </label>
+                </div>
+              </div>
+              <p className="text-xs text-orange-400">
+                注：关闭提现后，员工端小程序将无法进行提现操作；
+              </p>
+            </div>
+
+            {/* 2. Withdrawal Method */}
+            <div className="bg-white rounded border border-gray-100 p-6 mb-4 shadow-sm space-y-4">
+              <h3 className="text-sm font-bold text-gray-800">提现方式</h3>
+              <div className="flex items-center space-x-6">
+                <span className="text-sm text-gray-600">提现到：</span>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600" />
+                    <span className="text-sm text-gray-600">微信零钱</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" className="rounded border-gray-300 text-blue-600" />
+                    <span className="text-sm text-gray-600">银行卡</span>
+                  </label>
+                </div>
+              </div>
+              <p className="text-xs text-orange-400">
+                注：目前仅支持微信零钱提现，银行卡提现功能开发中；
+              </p>
+            </div>
+
+            {/* 3. Withdrawal Rules */}
+            <div className="bg-white rounded border border-gray-100 p-6 mb-4 shadow-sm space-y-6">
+              <h3 className="text-sm font-bold text-gray-800">提现规则</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <span className="text-sm text-gray-600">单笔最小提现金额：</span>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="text" 
+                      defaultValue="1.00" 
+                      className="w-32 px-2 py-1.5 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                    />
+                    <span className="text-sm text-gray-600">元</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <span className="text-sm text-gray-600">单笔最大提现金额：</span>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="text" 
+                      defaultValue="5000.00" 
+                      className="w-32 px-2 py-1.5 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                    />
+                    <span className="text-sm text-gray-600">元</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <span className="text-sm text-gray-600">每日提现次数上限：</span>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="text" 
+                      defaultValue="10" 
+                      className="w-32 px-2 py-1.5 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                    />
+                    <span className="text-sm text-gray-600">次</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <span className="text-sm text-gray-600">每月提现金额上限：</span>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="text" 
+                      defaultValue="50000.00" 
+                      className="w-32 px-2 py-1.5 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                    />
+                    <span className="text-sm text-gray-600">元</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <span className="text-sm text-gray-600">提现手续费率：</span>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="text" 
+                      defaultValue="0.00" 
+                      className="w-32 px-2 py-1.5 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+                    />
+                    <span className="text-sm text-gray-600">%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-50 space-y-4">
+                <div className="flex items-center space-x-6">
+                  <span className="text-sm text-gray-600">提现审核：</span>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center space-x-1 cursor-pointer group">
+                      <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center group-hover:border-blue-400">
+                        <div className="w-2 h-2 rounded-full bg-transparent"></div>
+                      </div>
+                      <span className="text-sm text-gray-600">开启</span>
+                    </label>
+                    <label className="flex items-center space-x-1 cursor-pointer group">
+                      <div className="w-4 h-4 rounded-full border border-blue-600 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                      </div>
+                      <span className="text-sm text-gray-600">自动通过</span>
+                    </label>
+                  </div>
+                </div>
+                <p className="text-xs text-orange-400">
+                  注：开启审核后，员工提现需管理员在“提现管理”中手动审核通过；自动通过则直接打款；
+                </p>
+              </div>
+            </div>
+
+            {/* 4. Withdrawal Description */}
+            <div className="bg-white rounded border border-gray-100 p-6 mb-4 shadow-sm space-y-4">
+              <h3 className="text-sm font-bold text-gray-800">提现说明</h3>
+              <textarea 
+                className="w-full h-24 p-3 border border-gray-200 rounded text-sm text-gray-700 focus:outline-none focus:border-blue-400 resize-none"
+                placeholder="请输入提现说明，将展示在员工端小程序提现页面..."
+                defaultValue="1. 提现申请将在1-3个工作日内处理；&#10;2. 提现金额将直接打入您的微信零钱；&#10;3. 如有疑问请联系财务部门。"
+              ></textarea>
+            </div>
+
+            {/* 5. Withdrawal Records */}
+            <div className="bg-white p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-4">
+                  <h3 className="text-sm font-bold text-gray-800">提现记录</h3>
+                  <div className="flex items-center space-x-2">
+                    <button className="px-3 py-1 border border-gray-200 text-gray-400 rounded text-xs cursor-not-allowed">批量通过</button>
+                    <button className="px-3 py-1 border border-gray-200 text-gray-400 rounded text-xs cursor-not-allowed">批量拒绝</button>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center border border-gray-200 rounded px-2 py-1.5 focus-within:border-blue-500 transition-colors">
+                    <span className="text-xs text-gray-400 mr-2">员工信息</span>
+                    <input type="text" placeholder="姓名/手机号" className="text-xs outline-none w-32" />
+                  </div>
+                  <div className="flex items-center border border-gray-200 rounded px-2 py-1.5 focus-within:border-blue-500 transition-colors">
+                    <span className="text-xs text-gray-400 mr-2">状态</span>
+                    <select className="text-xs outline-none bg-transparent">
+                      <option>全部</option>
+                      <option>待审核</option>
+                      <option>已通过</option>
+                      <option>已拒绝</option>
+                      <option>打款中</option>
+                      <option>打款失败</option>
+                    </select>
+                  </div>
+                  <button className="px-4 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">查询</button>
+                  <button className="px-3 py-1.5 border border-blue-600 text-blue-600 rounded text-sm flex items-center hover:bg-blue-50">
+                    导出 <ChevronDown size={14} className="ml-1" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[1000px]">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 w-10">
+                        <input type="checkbox" className="rounded border-gray-300" />
+                      </th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">提现单号</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">员工信息</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">所属机构</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">提现金额</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">提现方式</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">申请时间</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">状态</th>
+                      <th className="px-4 py-3 text-xs font-medium text-gray-500">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {[
+                      { id: 'TX202603190005', name: '张三', empId: '8888', phone: '13900001111', org: '海典智慧药房', amount: '88.00', method: '微信零钱', time: '2026-03-19 11:30:00', status: '待审核' },
+                      { id: 'TX202603190001', name: '随心看店长', empId: '1503', phone: '13873174117', org: '海典智慧药房双品汇店(直营)', amount: '100.00', method: '微信零钱', time: '2026-03-19 10:00:00', status: '已通过' },
+                      { id: 'TX202603180052', name: '批量导入随心看角色13', empId: '020713', phone: '17678790011', org: '上海海典集团', amount: '50.50', method: '微信零钱', time: '2026-03-18 15:30:22', status: '打款中' },
+                      { id: 'TX202603180012', name: '李文捷', empId: '2015', phone: '17788777643', org: '海典总部仓库', amount: '200.00', method: '微信零钱', time: '2026-03-18 09:12:45', status: '已拒绝' },
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 text-xs">
+                        <td className="px-4 py-4">
+                          <input type="checkbox" className="rounded border-gray-300" />
+                        </td>
+                        <td className="px-4 py-4 text-gray-600">{row.id}</td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                              <User size={12} />
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-800">{row.name}</div>
+                              <div className="text-[10px] text-gray-400">{row.phone}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-gray-600 max-w-[150px] truncate">{row.org}</td>
+                        <td className="px-4 py-4 font-medium text-gray-800">¥{row.amount}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.method}</td>
+                        <td className="px-4 py-4 text-gray-600">{row.time}</td>
+                        <td className="px-4 py-4">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                            row.status === '已通过' ? 'bg-green-50 text-green-600' :
+                            row.status === '打款中' ? 'bg-blue-50 text-blue-600' :
+                            row.status === '待审核' ? 'bg-orange-50 text-orange-600' :
+                            'bg-red-50 text-red-600'
+                          }`}>
+                            {row.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center space-x-2">
+                            <button className="text-blue-600 hover:underline">详情</button>
+                            {row.status === '待审核' && (
+                              <>
+                                <button className="text-green-600 hover:underline">通过</button>
+                                <button className="text-red-600 hover:underline">拒绝</button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {/* Pagination */}
+              <div className="flex justify-end items-center mt-4 space-x-2 text-xs text-gray-500">
+                <span>共 3 条</span>
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50"><ChevronLeft size={14} /></button>
+                <button className="px-2 py-1 border border-blue-600 text-blue-600 rounded bg-blue-50">1</button>
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50"><ChevronRight size={14} /></button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === '看谁赚得多' && (
+          <div className="flex flex-col h-full bg-white p-6 space-y-8">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600">参与排行类型：</span>
+                <div className="flex items-center space-x-6">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600" />
+                    <span className="text-sm text-gray-600">店员</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600" />
+                    <span className="text-sm text-gray-600">店长</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600" />
+                    <span className="text-sm text-gray-600">区域经理</span>
+                  </label>
+                </div>
+              </div>
+              <p className="text-xs text-orange-400">
+                注：勾选的对应角色收益类型将会统计在排行榜中；
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600">参与排行门店：</span>
+                <div className="flex items-center space-x-6">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600" />
+                    <span className="text-sm text-gray-600">加盟店</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300 text-blue-600" />
+                    <span className="text-sm text-gray-600">直营店</span>
+                  </label>
+                </div>
+              </div>
+              <p className="text-xs text-orange-400">
+                注：勾选的门店及门店收益将会统计在排行榜中，未勾选的门店将不参与排名且门店员工不展示看谁赚得多；
+              </p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === '连锁抽佣' && (
+          <div className="space-y-8 bg-white p-6 rounded shadow-sm">
+            {/* Enable Chain Commission Section */}
+            <div className="bg-gray-50 p-6 rounded-lg space-y-6">
+              <div className="flex items-center space-x-4 max-w-md">
+                <span className="text-sm font-medium text-gray-700">是否开启连锁抽佣</span>
+                <button className="relative inline-flex h-5 w-10 items-center rounded-full bg-blue-600 transition-colors focus:outline-none">
+                  <span className="inline-block h-3.5 w-3.5 transform translate-x-5.5 rounded-full bg-white transition-transform" />
+                </button>
+              </div>
+              <p className="text-xs text-orange-400">
+                注：连锁抽佣开启状态下，激励活动可配置连锁抽佣；关闭状态下，激励活动不可配置连锁抽佣；
+              </p>
+              
+              <div className="flex items-center space-x-4 max-w-md">
+                <span className="text-sm text-gray-600 w-24"><span className="text-red-500 mr-1">*</span>默认管理人</span>
+                <input 
+                  type="text" 
+                  defaultValue="小周自动化员工账户25899" 
+                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <p className="text-xs text-orange-400">
+                注：当分子公司未配置企业管理人的情况下，所有连锁抽佣激励将进入默认管理人账户；
+              </p>
+            </div>
+
+            {/* Account List Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-gray-800">连锁抽佣账户列表</h3>
+              <button className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                <Plus size={16} />
+                <span>新增</span>
+              </button>
+              
+              <div className="border border-gray-200 rounded overflow-hidden">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-3 font-medium text-gray-600">序号</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">所属企业</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">企业管理人</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    <tr>
+                      <td className="px-4 py-3 text-gray-600">1</td>
+                      <td className="px-4 py-3 text-gray-600">上海海典智慧药店</td>
+                      <td className="px-4 py-3 text-gray-600">海典101503</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center space-x-3">
+                          <button className="text-blue-600 hover:text-blue-700">编辑</button>
+                          <button className="text-blue-600 hover:text-blue-700">删除</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-end space-x-2 text-xs text-gray-500 py-4">
+                <span>共 1 条</span>
+                <button className="p-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled>
+                  <ChevronLeft size={14} />
+                </button>
+                <button className="px-2 py-1 border border-blue-600 bg-blue-50 text-blue-600 rounded">1</button>
+                <button className="p-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50" disabled>
+                  <ChevronRight size={14} />
+                </button>
+                <select className="px-2 py-1 border border-gray-300 rounded bg-white outline-none">
+                  <option>10条/页</option>
+                </select>
+                <span>跳转至</span>
+                <input type="text" defaultValue="1" className="w-10 px-1 py-1 border border-gray-300 rounded text-center" />
+                <span>页</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === '操作记录' && (
+          <div className="bg-white rounded shadow-sm overflow-hidden">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 font-medium text-gray-600 w-40">操作类型</th>
+                  <th className="px-4 py-3 font-medium text-gray-600 w-40">操作人</th>
+                  <th className="px-4 py-3 font-medium text-gray-600">变更内容</th>
+                  <th className="px-4 py-3 font-medium text-gray-600 w-48">操作时间</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {operationRecords.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-gray-600">{row.type}</td>
+                    <td className="px-4 py-3 text-gray-600">{row.user}</td>
+                    <td className="px-4 py-3 text-gray-600">{row.content}</td>
+                    <td className="px-4 py-3 text-gray-600">{row.time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Payment Method Modal (Figure 2) */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl w-[600px] overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-800">选择付款方式</h3>
+              <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="flex flex-wrap gap-6">
+                {['1/A现金', '15/E金孚龙卡', '1111/pengwzh付款方式', '1/货到付款'].map(pm => {
+                  const isNoneSelected = publicNonePaymentMethods.includes(pm);
+                  const isCustomSelected = publicCustomPaymentMethods.includes(pm);
+                  
+                  const isDisabled = publicPaymentModalType === 'custom' && isNoneSelected;
+                  const isChecked = publicPaymentModalType === 'none' ? isNoneSelected : isCustomSelected;
+
+                  return (
+                    <label key={pm} className={`flex items-center space-x-2 ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer group'}`}>
+                      <input 
+                        type="checkbox" 
+                        disabled={isDisabled}
+                        checked={isChecked}
+                        onChange={(e) => {
+                          if (publicPaymentModalType === 'none') {
+                            if (e.target.checked) {
+                              setPublicNonePaymentMethods(prev => [...prev, pm]);
+                              // Remove from custom if selected in none
+                              setPublicCustomPaymentMethods(prev => prev.filter(p => p !== pm));
+                              if (publicCustomActivePaymentMethod === pm) {
+                                setPublicCustomActivePaymentMethod(null);
+                              }
+                            } else {
+                              setPublicNonePaymentMethods(prev => prev.filter(p => p !== pm));
+                            }
+                          } else if (publicPaymentModalType === 'custom') {
+                            if (e.target.checked) {
+                              setPublicCustomPaymentMethods(prev => [...prev, pm]);
+                            } else {
+                              setPublicCustomPaymentMethods(prev => prev.filter(p => p !== pm));
+                            }
+                          }
+                        }}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:bg-gray-100"
+                      />
+                      <span className={`text-sm ${isDisabled ? 'text-gray-400' : 'text-gray-600 group-hover:text-blue-600'} transition-colors`}>{pm}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex items-center justify-end space-x-3 px-4 py-3 bg-gray-50 border-t border-gray-100">
+              <button 
+                onClick={() => setShowPaymentModal(false)}
+                className="px-4 py-1.5 text-sm border border-gray-300 rounded text-gray-600 hover:bg-white"
+              >
+                取消
+              </button>
+              <button 
+                onClick={() => {
+                  if (publicCustomPaymentMethods.length > 0 && !publicCustomActivePaymentMethod) {
+                    setPublicCustomActivePaymentMethod(publicCustomPaymentMethods[0]);
+                  } else if (publicCustomPaymentMethods.length > 0 && !publicCustomPaymentMethods.includes(publicCustomActivePaymentMethod!)) {
+                    setPublicCustomActivePaymentMethod(publicCustomPaymentMethods[0]);
+                  } else if (publicCustomPaymentMethods.length === 0) {
+                    setPublicCustomActivePaymentMethod(null);
+                  }
+                  setShowPaymentModal(false);
+                }}
+                className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                确定
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Selection Modal (Figure 1) */}
+      {showProductModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl w-[800px] max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-800">选择商品</h3>
+              <button onClick={() => setShowProductModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4 overflow-y-auto no-scrollbar">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 w-20">商品名称</span>
+                  <input type="text" placeholder="输入商品名称模糊搜索" className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 w-20">商品编码</span>
+                  <div className="flex-1 relative">
+                    <input type="text" placeholder="输入商品编码精确搜索" className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
+                    <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 w-20">条形码</span>
+                  <input type="text" placeholder="输入商品条形码" className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 w-20">批准文号</span>
+                  <div className="flex-1 flex space-x-2">
+                    <input type="text" placeholder="输入批准文号" className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
+                    <button className="px-4 py-1.5 bg-white border border-blue-600 text-blue-600 rounded text-sm hover:bg-blue-50">查询</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-orange-50 border border-orange-100 rounded px-3 py-2 flex items-center space-x-2">
+                <div className="w-4 h-4 rounded-full border border-orange-400 flex items-center justify-center text-[10px] text-orange-400 font-bold">!</div>
+                <span className="text-xs text-orange-400">已参与“按商品批号”政策商品不可勾选</span>
+              </div>
+
+              <div className="border border-gray-100 rounded overflow-hidden">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-2 w-10"><input type="checkbox" className="rounded border-gray-300" /></th>
+                      <th className="px-4 py-2 font-medium text-gray-600">商品图片</th>
+                      <th className="px-4 py-2 font-medium text-gray-600">商品信息</th>
+                      <th className="px-4 py-2 font-medium text-gray-600">关联活动</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {[
+                      { img: 'https://picsum.photos/seed/med1/40/40', name: '肠炎宁片', spec: '0.24g*24片', code: '009385', activity: '564169/商品冲突弹...' },
+                      { img: 'https://picsum.photos/seed/med2/40/40', name: '肠炎宁片 (康恩贝)', spec: '0.42g*48s', code: '144081', activity: '564168/厂家模式活...' },
+                      { img: 'https://picsum.photos/seed/med3/40/40', name: '0000010', spec: '6g', code: '0000010', activity: '564169/商品冲突弹...' },
+                    ].map((p, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50">
+                        <td className="px-4 py-4"><input type="checkbox" className="rounded border-gray-300" /></td>
+                        <td className="px-4 py-4">
+                          <img src={p.img} alt="" className="w-10 h-10 rounded border border-gray-100" referrerPolicy="no-referrer" />
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="font-medium text-gray-800">{p.name}</div>
+                          <div className="text-xs text-gray-400">规格：{p.spec}</div>
+                          <div className="text-xs text-gray-400">商品编码：{p.code}</div>
+                        </td>
+                        <td className="px-4 py-4 text-blue-600 text-xs">
+                          {p.activity}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex items-center justify-end space-x-2 text-xs text-gray-500 py-2">
+                <span>共 43560 条</span>
+                <button className="p-1 border border-gray-300 rounded hover:bg-gray-50"><ChevronLeft size={14} /></button>
+                <button className="px-2 py-1 border border-blue-600 bg-blue-50 text-blue-600 rounded">1</button>
+                <button className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50">2</button>
+                <button className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50">3</button>
+                <button className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50">4</button>
+                <button className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50">5</button>
+                <button className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50">6</button>
+                <span>...</span>
+                <button className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50">4356</button>
+                <button className="p-1 border border-gray-300 rounded hover:bg-gray-50"><ChevronRight size={14} /></button>
+              </div>
+            </div>
+
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+              <div className="text-xs text-gray-400">提示：活动商品最多添加100件</div>
+              <div className="flex items-center space-x-3">
+                <button 
+                  onClick={() => setShowProductModal(false)}
+                  className="px-6 py-1.5 text-sm border border-blue-600 text-blue-600 rounded hover:bg-blue-50"
+                >
+                  取消
+                </button>
+                <button 
+                  onClick={() => {
+                    handleAddProduct([{ code: '009385', ratio: '' }]);
+                    setShowProductModal(false);
+                  }}
+                  className="px-6 py-1.5 text-sm bg-blue-400 text-white rounded hover:bg-blue-500"
+                >
+                  确定
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Private Member Level Modal */}
+      {showPrivateMemberLevelModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl w-[500px] overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-800">选择会员等级</h3>
+              <button onClick={() => setShowPrivateMemberLevelModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="flex flex-wrap gap-6">
+                {['普通卡', '银卡', '金卡', '白金卡', '钻石卡'].map(level => (
+                  <label key={level} className="flex items-center space-x-2 cursor-pointer group">
+                    <input 
+                      type="checkbox" 
+                      checked={privateSelectedMemberLevels.includes(level)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setPrivateSelectedMemberLevels(prev => [...prev, level]);
+                        } else {
+                          setPrivateSelectedMemberLevels(prev => prev.filter(l => l !== level));
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-600 group-hover:text-blue-600 transition-colors">{level}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center justify-end space-x-3 px-4 py-3 bg-gray-50 border-t border-gray-100">
+              <button 
+                onClick={() => setShowPrivateMemberLevelModal(false)}
+                className="px-4 py-1.5 text-sm border border-gray-300 rounded text-gray-600 hover:bg-white"
+              >
+                取消
+              </button>
+              <button 
+                onClick={() => setShowPrivateMemberLevelModal(false)}
+                className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                确定
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Private Payment Method Modal */}
+      {showPrivatePaymentModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl w-[600px] overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-800">选择付款方式</h3>
+              <button onClick={() => setShowPrivatePaymentModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="flex flex-wrap gap-6">
+                {['1/A现金', '15/E金孚龙卡', '1111/pengwzh付款方式', '1/货到付款'].map(pm => {
+                  const isNoneSelected = privateNonePaymentMethods.includes(pm);
+                  const isCustomSelected = privateCustomPaymentMethods.includes(pm);
+                  
+                  const isDisabled = privatePaymentModalType === 'custom' && isNoneSelected;
+                  const isChecked = privatePaymentModalType === 'none' ? isNoneSelected : isCustomSelected;
+
+                  return (
+                    <label key={pm} className={`flex items-center space-x-2 ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer group'}`}>
+                      <input 
+                        type="checkbox" 
+                        disabled={isDisabled}
+                        checked={isChecked}
+                        onChange={(e) => {
+                          if (privatePaymentModalType === 'none') {
+                            if (e.target.checked) {
+                              setPrivateNonePaymentMethods(prev => [...prev, pm]);
+                              // Remove from custom if selected in none
+                              setPrivateCustomPaymentMethods(prev => prev.filter(p => p !== pm));
+                              if (privateCustomActivePaymentMethod === pm) {
+                                setPrivateCustomActivePaymentMethod(null);
+                              }
+                            } else {
+                              setPrivateNonePaymentMethods(prev => prev.filter(p => p !== pm));
+                            }
+                          } else if (privatePaymentModalType === 'custom') {
+                            if (e.target.checked) {
+                              setPrivateCustomPaymentMethods(prev => [...prev, pm]);
+                            } else {
+                              setPrivateCustomPaymentMethods(prev => prev.filter(p => p !== pm));
+                            }
+                          }
+                        }}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:bg-gray-100"
+                      />
+                      <span className={`text-sm ${isDisabled ? 'text-gray-400' : 'text-gray-600 group-hover:text-blue-600'} transition-colors`}>{pm}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex items-center justify-end space-x-3 px-4 py-3 bg-gray-50 border-t border-gray-100">
+              <button 
+                onClick={() => setShowPrivatePaymentModal(false)}
+                className="px-4 py-1.5 text-sm border border-gray-300 rounded text-gray-600 hover:bg-white"
+              >
+                取消
+              </button>
+              <button 
+                onClick={() => {
+                  if (privateCustomPaymentMethods.length > 0 && !privateCustomActivePaymentMethod) {
+                    setPrivateCustomActivePaymentMethod(privateCustomPaymentMethods[0]);
+                  } else if (privateCustomPaymentMethods.length > 0 && !privateCustomPaymentMethods.includes(privateCustomActivePaymentMethod!)) {
+                    setPrivateCustomActivePaymentMethod(privateCustomPaymentMethods[0]);
+                  } else if (privateCustomPaymentMethods.length === 0) {
+                    setPrivateCustomActivePaymentMethod(null);
+                  }
+                  setShowPrivatePaymentModal(false);
+                }}
+                className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                确定
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Private Product Selection Modal */}
+      {showPrivateProductModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl w-[800px] max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-800">选择商品</h3>
+              <button onClick={() => setShowPrivateProductModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4 overflow-y-auto no-scrollbar">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 w-20">商品名称</span>
+                  <input type="text" placeholder="输入商品名称模糊搜索" className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 w-20">商品编码</span>
+                  <div className="flex-1 relative">
+                    <input type="text" placeholder="输入商品编码精确搜索" className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
+                    <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 w-20">条形码</span>
+                  <input type="text" placeholder="输入商品条形码" className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600 w-20">批准文号</span>
+                  <div className="flex-1 flex space-x-2">
+                    <input type="text" placeholder="输入批准文号" className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
+                    <button className="px-4 py-1.5 bg-white border border-blue-600 text-blue-600 rounded text-sm hover:bg-blue-50">查询</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-orange-50 border border-orange-100 rounded px-3 py-2 flex items-center space-x-2">
+                <div className="w-4 h-4 rounded-full border border-orange-400 flex items-center justify-center text-[10px] text-orange-400 font-bold">!</div>
+                <span className="text-xs text-orange-400">已参与“按商品批号”政策商品不可勾选</span>
+              </div>
+
+              <div className="border border-gray-100 rounded overflow-hidden">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-2 w-10"><input type="checkbox" className="rounded border-gray-300" /></th>
+                      <th className="px-4 py-2 font-medium text-gray-600">商品图片</th>
+                      <th className="px-4 py-2 font-medium text-gray-600">商品信息</th>
+                      <th className="px-4 py-2 font-medium text-gray-600">关联活动</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {[
+                      { img: 'https://picsum.photos/seed/med1/40/40', name: '肠炎宁片', spec: '0.24g*24片', code: '009385', activity: '564169/商品冲突弹...' },
+                      { img: 'https://picsum.photos/seed/med2/40/40', name: '肠炎宁片 (康恩贝)', spec: '0.42g*48s', code: '144081', activity: '564168/厂家模式活...' },
+                      { img: 'https://picsum.photos/seed/med3/40/40', name: '0000010', spec: '6g', code: '0000010', activity: '564169/商品冲突弹...' },
+                    ].map((p, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50">
+                        <td className="px-4 py-4"><input type="checkbox" className="rounded border-gray-300" /></td>
+                        <td className="px-4 py-4">
+                          <img src={p.img} alt="" className="w-10 h-10 rounded border border-gray-100" referrerPolicy="no-referrer" />
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="font-medium text-gray-800">{p.name}</div>
+                          <div className="text-xs text-gray-400">规格：{p.spec}</div>
+                          <div className="text-xs text-gray-400">商品编码：{p.code}</div>
+                        </td>
+                        <td className="px-4 py-4 text-blue-600 text-xs">
+                          {p.activity}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+              <div className="text-xs text-gray-400">提示：活动商品最多添加100件</div>
+              <div className="flex items-center space-x-3">
+                <button 
+                  onClick={() => setShowPrivateProductModal(false)}
+                  className="px-6 py-1.5 text-sm border border-blue-600 text-blue-600 rounded hover:bg-blue-50"
+                >
+                  取消
+                </button>
+                <button 
+                  onClick={() => {
+                    handleAddPrivateProduct([{ code: '009385', ratio: '' }]);
+                    setShowPrivateProductModal(false);
+                  }}
+                  className="px-6 py-1.5 text-sm bg-blue-400 text-white rounded hover:bg-blue-500"
+                >
+                  确定
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Action Buttons */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+        <button className="flex items-center space-x-1 px-4 py-2 border border-blue-600 text-blue-600 rounded bg-white text-sm hover:bg-blue-50 transition-colors shadow-sm font-medium">
+          <Edit3 size={14} />
+          <span>编辑</span>
+        </button>
+      </div>
+      <div className="absolute bottom-4 right-4">
+        <button className="px-6 py-2 bg-blue-600 text-white rounded shadow-md hover:bg-blue-700 transition-colors text-sm font-medium">
+          保存设置
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const HomeView = ({ onActivityClick }: { onActivityClick?: (id: string) => void }) => {
   const [activeTab, setActiveTab] = useState('品种维度');
 
@@ -1350,10 +3456,350 @@ const HomeView = ({ onActivityClick }: { onActivityClick?: (id: string) => void 
   );
 };
 
+const ProductRatioInput = ({ initialRatio, onSave, isManual }: { initialRatio: string, onSave: (ratio: string) => void, isManual?: boolean }) => {
+  const [ratio, setRatio] = useState(initialRatio);
+  const [isEditing, setIsEditing] = useState(isManual && !initialRatio);
+
+  const handleSave = () => {
+    let numStr = ratio.trim();
+    if (!numStr) {
+      alert('请输入商品激励比例');
+      return;
+    }
+    let isPercent = false;
+    if (numStr.endsWith('%')) {
+      isPercent = true;
+      numStr = numStr.slice(0, -1);
+    }
+    const val = parseFloat(numStr);
+    if (isNaN(val)) {
+      alert('请输入有效的数字');
+      return;
+    }
+    
+    const decimalVal = isPercent ? val / 100 : val;
+    if (decimalVal < 0 || decimalVal > 1) {
+      alert('商品激励比例最小值为0，最大值为100%');
+      return;
+    }
+
+    onSave(ratio);
+    setIsEditing(false);
+  };
+
+  if (!isEditing) {
+    return (
+      <div className="flex items-center space-x-2">
+        <span>{ratio || '-'}</span>
+        <button 
+          onClick={() => setIsEditing(true)}
+          className="px-2 py-1 text-xs text-blue-600 hover:text-blue-700"
+        >
+          编辑
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center space-x-2">
+      <input 
+        type="text" 
+        value={ratio} 
+        onChange={(e) => setRatio(e.target.value)} 
+        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm outline-none focus:border-blue-400"
+      />
+      <button 
+        onClick={handleSave}
+        className="px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+      >
+        保存
+      </button>
+    </div>
+  );
+};
+
+function CreateActivityView({ onBack }: { onBack: () => void }) {
+  const [step, setStep] = useState(1);
+
+  const steps = ['创建活动信息', '配置激励政策', '活动商品', '活动门店'];
+
+  return (
+    <div className="p-6 bg-white min-h-full">
+      <div className="flex items-center mb-6">
+        <button onClick={onBack} className="text-gray-600 hover:text-blue-600 flex items-center mr-4">
+          <ArrowLeft size={18} className="mr-1" /> 返回
+        </button>
+        <h2 className="text-lg font-bold text-gray-800">代厂家建活动</h2>
+      </div>
+
+      <div className="flex items-center mb-8 bg-gray-50 p-4 rounded-lg">
+        {steps.map((s, i) => (
+          <div key={s} className="flex items-center flex-1">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${step > i + 1 ? 'bg-green-500 text-white' : step === i + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+              {i + 1}
+            </div>
+            <span className={`ml-2 text-sm ${step === i + 1 ? 'text-blue-600 font-bold' : 'text-gray-500'}`}>{s}</span>
+            {i < steps.length - 1 && <div className="flex-1 h-px bg-gray-300 mx-4" />}
+          </div>
+        ))}
+      </div>
+
+      {step === 1 ? (
+        <div className="space-y-6 max-w-3xl">
+          <div className="grid grid-cols-12 gap-4 items-center">
+            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 海典服务费</label>
+            <div className="col-span-10 flex items-center space-x-4">
+              <label className="flex items-center"><input type="radio" name="serviceFee" className="mr-2" defaultChecked /> 连锁汇付账号</label>
+              <label className="flex items-center"><input type="radio" name="serviceFee" className="mr-2" /> 厂家汇账号</label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-12 gap-4 items-center">
+            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 关联工业</label>
+            <select className="col-span-10 border border-gray-300 rounded px-3 py-2 text-sm">
+              <option>请选择</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-12 gap-4 items-center">
+            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 活动主题</label>
+            <div className="col-span-10 relative">
+              <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" maxLength={30} />
+              <span className="absolute right-3 top-2 text-xs text-gray-400">0/30</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-12 gap-4 items-start">
+            <label className="col-span-2 text-sm text-right text-gray-600 pt-2"><span className="text-red-500">*</span> 激励模式</label>
+            <div className="col-span-10 space-y-2">
+              <label className="flex items-center"><input type="radio" name="mode" className="mr-2" defaultChecked /> 及时豆模式，即时激励，实时向店员发放销售激励 <span className="ml-2 bg-orange-100 text-orange-600 text-[10px] px-1.5 rounded">推荐</span></label>
+              <label className="flex items-center"><input type="radio" name="mode" className="mr-2" /> 延时豆模式，由连锁线下向店员结算销售激励</label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-12 gap-4 items-center">
+            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 激励计算</label>
+            <div className="col-span-10 flex items-center space-x-4">
+              <label className="flex items-center"><input type="radio" name="calc" className="mr-2" defaultChecked /> 按商品数量</label>
+              <label className="flex items-center"><input type="radio" name="calc" className="mr-2" /> 按商品金额</label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-12 gap-4 items-center">
+            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 激励发放</label>
+            <span className="col-span-10 text-sm text-gray-800">按固定金额</span>
+          </div>
+
+          <div className="grid grid-cols-12 gap-4 items-center">
+            <label className="col-span-2 text-sm text-right text-gray-600">关联目标</label>
+            <div className="col-span-10 flex items-center space-x-4">
+              <select className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm">
+                <option>请选择</option>
+              </select>
+              <button className="text-blue-600 text-sm">新建目标</button>
+            </div>
+          </div>
+          <div className="grid grid-cols-12 gap-4">
+            <div className="col-span-2"></div>
+            <div className="col-span-10 bg-orange-50 text-orange-600 text-xs p-2 rounded flex items-center">
+              <Info size={14} className="mr-1" /> 仅限发布状态为【已发布】的目标活动
+            </div>
+          </div>
+
+          <div className="grid grid-cols-12 gap-4 items-center">
+            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 活动时间</label>
+            <div className="col-span-10 flex items-center space-x-2">
+              <input type="date" className="border border-gray-300 rounded px-3 py-2 text-sm" />
+              <span>至</span>
+              <input type="date" className="border border-gray-300 rounded px-3 py-2 text-sm" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-12 gap-4 items-start">
+            <label className="col-span-2 text-sm text-right text-gray-600 pt-2">活动封面</label>
+            <div className="col-span-10">
+              <div className="w-32 h-24 border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-blue-400">
+                <Plus size={24} />
+              </div>
+              <p className="text-xs text-gray-400 mt-2">建议240*160px，格式PNG，JPG，JPEG不超过2M</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-12 gap-4 items-start">
+            <label className="col-span-2 text-sm text-right text-gray-600 pt-2"><span className="text-red-500">*</span> 活动简介</label>
+            <div className="col-span-10 relative">
+              <textarea className="w-full h-24 border border-gray-300 rounded px-3 py-2 text-sm" maxLength={300}></textarea>
+              <span className="absolute right-3 bottom-2 text-xs text-gray-400">0/300</span>
+            </div>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-gray-100 flex space-x-4">
+            <button className="px-6 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">仅保存</button>
+            <button onClick={() => setStep(2)} className="px-6 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">保存并设置政策</button>
+          </div>
+        </div>
+      ) : step === 2 ? (
+        <div className="p-6">
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 flex items-start space-x-3">
+            <Info size={18} className="text-blue-600 mt-0.5 shrink-0" />
+            <div className="space-y-2">
+              <p className="text-xs text-blue-800">
+                *当同一个商品在不同活动中设置了不同的激励政策时，我们将按照以下优先级进行奖励发放（激励退还将按照此优先级反向进行）：
+              </p>
+              <div className="flex items-center space-x-2 text-[10px] text-gray-600">
+                <span>固定组合关联</span> <ChevronRight size={12} />
+                <span>高频带低频关联</span> <ChevronRight size={12} />
+                <span>高频带系列关联</span> <ChevronRight size={12} />
+                <span>系列关联-任意组合</span> <ChevronRight size={12} />
+                <span>疗程销售激励</span> <ChevronRight size={12} />
+                <span>单品销售奖励</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex space-x-4 border-b border-gray-200 mb-6">
+            {['单品销售激励', '疗程销售激励', '关联销售激励', '销售排行激励'].map(tab => (
+              <button key={tab} className={`pb-2 text-sm ${tab === '单品销售激励' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}>
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="bg-orange-50 text-orange-600 text-xs p-3 rounded mb-4 flex items-center">
+            <Info size={14} className="mr-1" /> 注意：同一商品设置“按商品批号激励”，则不能再设置其他任何激励政策(包含单品、疗程、关联、销售排行)；
+          </div>
+
+          <div className="flex space-x-4 text-sm mb-4">
+            <button className="text-blue-600 border-b-2 border-blue-600 pb-1">按商品激励</button>
+            <button className="text-gray-600">按商品批号激励</button>
+          </div>
+
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex space-x-2">
+              <button className="text-blue-600 text-sm flex items-center"><Plus size={16} className="mr-1" /> 添加商品</button>
+              <button className="text-gray-600 text-sm">批量删除</button>
+              <button className="text-gray-600 text-sm">导入商品</button>
+              <button className="text-gray-600 text-sm">导出</button>
+            </div>
+            <div className="flex space-x-2">
+              <select className="border border-gray-300 rounded px-2 py-1 text-sm"><option>商品编码</option></select>
+              <input type="text" placeholder="请输入商品编码" className="border border-gray-300 rounded px-2 py-1 text-sm" />
+              <button className="bg-blue-600 text-white px-4 py-1 rounded text-sm">查询</button>
+              <button className="border border-gray-300 rounded px-4 py-1 text-sm">重置</button>
+            </div>
+          </div>
+
+          <table className="w-full border-collapse border border-gray-200 text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="p-3 border border-gray-200 text-left">商品信息</th>
+                <th className="p-3 border border-gray-200 text-left">激励政策</th>
+                <th className="p-3 border border-gray-200 text-left">更新时间</th>
+                <th className="p-3 border border-gray-200 text-left">营销政策</th>
+                <th className="p-3 border border-gray-200 text-left">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colSpan={5} className="p-8 text-center text-gray-400">暂无数据</td>
+              </tr>
+            </tbody>
+          </table>
+          <div className="mt-8 flex justify-end space-x-4">
+            <button onClick={() => setStep(1)} className="px-6 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">上一步</button>
+            <button onClick={() => setStep(3)} className="px-6 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">下一步</button>
+          </div>
+        </div>
+      ) : step === 3 ? (
+        <div className="p-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">活动商品</h3>
+          <p className="text-gray-500">商品选择页面开发中...</p>
+          <div className="mt-8 flex justify-end space-x-4">
+            <button onClick={() => setStep(2)} className="px-6 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">上一步</button>
+            <button onClick={() => setStep(4)} className="px-6 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">下一步</button>
+          </div>
+        </div>
+      ) : step === 4 ? (
+        <div className="p-6">
+          <div className="grid grid-cols-4 gap-4 mb-6 text-sm">
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500">所属企业</label>
+              <select className="w-full border border-gray-300 rounded px-2 py-1.5"><option>请选择</option></select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500">门店编码</label>
+              <input type="text" className="w-full border border-gray-300 rounded px-2 py-1.5" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500">门店名称</label>
+              <input type="text" className="w-full border border-gray-300 rounded px-2 py-1.5" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500">机构类型</label>
+              <select className="w-full border border-gray-300 rounded px-2 py-1.5"><option>选择机构类型</option></select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500">所属机构</label>
+              <input type="text" className="w-full border border-gray-300 rounded px-2 py-1.5" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500">所属区域</label>
+              <select className="w-full border border-gray-300 rounded px-2 py-1.5"><option>请选择</option></select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-500">所属片区</label>
+              <select className="w-full border border-gray-300 rounded px-2 py-1.5"><option>请选择所属片区</option></select>
+            </div>
+            <div className="flex items-end space-x-2">
+              <button className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm">查询</button>
+              <button className="border border-gray-300 rounded px-4 py-1.5 text-sm">重置</button>
+            </div>
+          </div>
+
+          <div className="flex space-x-2 mb-4">
+            <button className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm">添加门店</button>
+            <button className="border border-gray-300 rounded px-4 py-1.5 text-sm">导入门店</button>
+            <button className="border border-gray-300 rounded px-4 py-1.5 text-sm">更多操作</button>
+          </div>
+
+          <p className="text-sm text-gray-600 mb-4">当前活动共 0 家门店参与活动，您当前可操作 0 家门店，活动将按其参与时间计算活动商品奖励与统计销售数据。</p>
+
+          <table className="w-full border-collapse border border-gray-200 text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="p-3 border border-gray-200 text-left"><input type="checkbox" /></th>
+                <th className="p-3 border border-gray-200 text-left">门店编码</th>
+                <th className="p-3 border border-gray-200 text-left">门店名称</th>
+                <th className="p-3 border border-gray-200 text-left">所属企业</th>
+                <th className="p-3 border border-gray-200 text-left">机构分类</th>
+                <th className="p-3 border border-gray-200 text-left">所属机构</th>
+                <th className="p-3 border border-gray-200 text-left">所属区域</th>
+                <th className="p-3 border border-gray-200 text-left">参与时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colSpan={8} className="p-8 text-center text-gray-400">暂无数据</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div className="mt-8 flex justify-end space-x-4">
+            <button onClick={() => setStep(3)} className="px-6 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">上一步</button>
+            <button className="px-6 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700">发布活动</button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeMainTab, setActiveMainTab] = useState('慢病活动');
   const [activeSidebar, setActiveSidebar] = useState('四季蝉');
-  const [expandedSubmenu, setExpandedSubmenu] = useState('活动管理');
+  const [expandedSubmenu, setExpandedSubmenu] = useState('');
   const [activeSubItem, setActiveSubItem] = useState('首页');
   
   const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
@@ -1427,6 +3873,10 @@ export default function App() {
     }
   };
 
+  if (!isLoggedIn) {
+    return <Login onLogin={() => setIsLoggedIn(true)} />;
+  }
+
   return (
     <div className="flex h-screen bg-gray-50 text-gray-800 font-sans overflow-hidden">
       {/* Sidebar - Level 1 */}
@@ -1443,7 +3893,11 @@ export default function App() {
           <SidebarItem icon={GraduationCap} label="培训" onClick={() => setActiveSidebar('培训')} active={activeSidebar === '培训'} />
           <SidebarItem icon={BarChart3} label="数据" onClick={() => setActiveSidebar('数据')} active={activeSidebar === '数据'} />
           <SidebarItem icon={UserPlus} label="助手" onClick={() => setActiveSidebar('助手')} active={activeSidebar === '助手'} />
-          <SidebarItem icon={Leaf} label="四季蝉" onClick={() => setActiveSidebar('四季蝉')} active={activeSidebar === '四季蝉'} />
+          <SidebarItem icon={Leaf} label="四季蝉" onClick={() => {
+            setActiveSidebar('四季蝉');
+            setActiveSubItem('首页');
+            setExpandedSubmenu('');
+          }} active={activeSidebar === '四季蝉'} />
           <SidebarItem icon={ShoppingCart} label="随心采" onClick={() => setActiveSidebar('随心采')} active={activeSidebar === '随心采'} />
           <SidebarItem icon={Eye} label="随心看" onClick={() => setActiveSidebar('随心看')} active={activeSidebar === '随心看'} />
           <SidebarItem icon={Briefcase} label="业务" onClick={() => setActiveSidebar('业务')} active={activeSidebar === '业务'} />
@@ -1550,8 +4004,12 @@ export default function App() {
             selectedActivityId ? (
               <ActivityDetailView id={selectedActivityId} onBack={() => setSelectedActivityId(null)} />
             ) : (
-              <MyActivitiesView onDetailClick={(id) => setSelectedActivityId(id)} />
+              <MyActivitiesView onDetailClick={(id) => setSelectedActivityId(id)} onCreateClick={() => setActiveSubItem('创建活动')} />
             )
+          ) : activeSubItem === '创建活动' ? (
+            <CreateActivityView onBack={() => setActiveSubItem('我的活动')} />
+          ) : activeSubItem === '业务设置' ? (
+            <BusinessSettingsView />
           ) : activeSubItem === '活动广场' ? (
             <>
               {/* Banner Area */}
