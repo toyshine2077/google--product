@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Login from './Login';
 import { 
   Home, 
@@ -42,8 +42,17 @@ import {
   FileText,
   Edit3,
   User,
+  Users,
+  MessageCircle,
   Calendar,
-  Check
+  Check,
+  ThumbsUp,
+  Share2,
+  MessageSquare,
+  ShieldCheck,
+  Wallet,
+  LogIn,
+  ArrowUpDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -295,40 +304,313 @@ const Pagination = ({ total, pageSize = 5, currentPage, onPageChange }: { total:
   );
 };
 
+// --- Reusable Table Filter Component ---
+const GenericTableFilter = ({ 
+  initialTimeField, 
+  initialStartDate, 
+  initialEndDate,
+  onQuery,
+  onReset
+}: {
+  initialTimeField: string,
+  initialStartDate: string,
+  initialEndDate: string,
+  onQuery: (data: { timeField: string, startDate: string, endDate: string }) => void,
+  onReset: () => void
+}) => {
+  const [localTimeField, setLocalTimeField] = useState(initialTimeField);
+  const [localStartDate, setLocalStartDate] = useState(initialStartDate);
+  const [localEndDate, setLocalEndDate] = useState(initialEndDate);
+  const [showTimeFieldDropdown, setShowTimeFieldDropdown] = useState(false);
+
+  const timeFields = [
+    '订单创建时间',
+    '奖励生成时间',
+    '账户中心创建时间',
+    '账户中心入账时间',
+    '账户中心出账时间'
+  ];
+
+  // Sync with initial values when they change (e.g. on reset)
+  useEffect(() => {
+    setLocalTimeField(initialTimeField);
+    setLocalStartDate(initialStartDate);
+    setLocalEndDate(initialEndDate);
+  }, [initialTimeField, initialStartDate, initialEndDate]);
+
+  const handleQuery = () => {
+    onQuery({
+      timeField: localTimeField,
+      startDate: localStartDate,
+      endDate: localEndDate
+    });
+  };
+
+  return (
+    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-wrap items-center gap-6 mb-4">
+      <div className="flex items-center space-x-3 relative">
+        <div className="relative">
+          <button 
+            onClick={() => setShowTimeFieldDropdown(!showTimeFieldDropdown)}
+            className={`flex items-center justify-between px-3 py-1.5 min-w-[120px] text-sm border rounded-lg transition-all ${
+              showTimeFieldDropdown ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-200'
+            } bg-white text-gray-700`}
+          >
+            <span>{localTimeField}</span>
+            {showTimeFieldDropdown ? (
+              <ChevronLeft size={16} className="rotate-90 text-blue-500 ml-2" />
+            ) : (
+              <ChevronDown size={16} className="text-gray-400 ml-2" />
+            )}
+          </button>
+
+          {showTimeFieldDropdown && (
+            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-100 rounded-lg shadow-xl z-50 py-1">
+              {timeFields.map((field) => (
+                <button
+                  key={field}
+                  onClick={() => {
+                    setLocalTimeField(field);
+                    setShowTimeFieldDropdown(false);
+                  }}
+                  className="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  <span>{field}</span>
+                  {localTimeField === field && <Check size={14} className="text-blue-500" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-3">
+        <span className="text-sm font-medium text-gray-600">时间范围:</span>
+        <div className="flex items-center space-x-2">
+          <div className="relative">
+            <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+            <input 
+              type="date" 
+              value={localStartDate}
+              onChange={(e) => setLocalStartDate(e.target.value)}
+              className="pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 bg-gray-50/50"
+            />
+          </div>
+          <span className="text-gray-400">-</span>
+          <div className="relative">
+            <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+            <input 
+              type="date" 
+              value={localEndDate}
+              onChange={(e) => setLocalEndDate(e.target.value)}
+              className="pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 bg-gray-50/50"
+            />
+          </div>
+        </div>
+        <span className="text-[10px] text-orange-400">* 最长可选择一年</span>
+      </div>
+
+      <div className="flex items-center space-x-2 ml-auto">
+        <button 
+          onClick={handleQuery}
+          className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center"
+        >
+          <Search size={14} className="mr-1.5" />
+          查询
+        </button>
+        <button 
+          onClick={onReset}
+          className="px-4 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors flex items-center"
+        >
+          <RotateCcw size={14} className="mr-1.5" />
+          重置
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // --- Variety Dimension View Component ---
 
 const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: string) => void }) => {
+  const [trendMetric, setTrendMetric] = useState('按销售金额');
+  const [trendComparison, setTrendComparison] = useState('同比');
+  const [show3AModal, setShow3AModal] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  
+  const topSellingRef = useRef<HTMLDivElement>(null);
+  const nonSellingRef = useRef<HTMLDivElement>(null);
+
+  const threeAProducts = [
+    { name: '感冒灵颗粒', code: '6901234567890', batchNumber: '20240401', tag: '3A', qty: '4159', sales: '41174.1', gp: '12352.2', gpr: '30.00%', incentiveQty: '3800', incentiveSales: '38000' },
+    { name: '阿莫西林胶囊', code: '6901234567891', batchNumber: '20240315', tag: '3A', qty: '3200', sales: '32000.0', gp: '9600.0', gpr: '30.00%', incentiveQty: '3000', incentiveSales: '30000' },
+    { name: '板蓝根颗粒', code: '6901234567892', batchNumber: '20240405', tag: '3A', qty: '2800', sales: '28000.0', gp: '8400.0', gpr: '30.00%', incentiveQty: '2500', incentiveSales: '25000' },
+    { name: '布洛芬缓释胶囊', code: '6901234567893', batchNumber: '20240210', tag: '3A', qty: '2500', sales: '25000.0', gp: '7500.0', gpr: '30.00%', incentiveQty: '2200', incentiveSales: '22000' },
+    { name: '小儿氨酚黄那敏颗粒', code: '6901234567894', batchNumber: '20240412', tag: '3A', qty: '2100', sales: '21000.0', gp: '6300.0', gpr: '30.00%', incentiveQty: '1800', incentiveSales: '18000' },
+    { name: '维C银翘片', code: '6901234567895', batchNumber: '20240320', tag: '3A', qty: '1900', sales: '19000.0', gp: '5700.0', gpr: '30.00%', incentiveQty: '1600', incentiveSales: '16000' },
+    { name: '复方草珊瑚含片', code: '6901234567896', batchNumber: '20240115', tag: '3A', qty: '1700', sales: '17000.0', gp: '5100.0', gpr: '30.00%', incentiveQty: '1400', incentiveSales: '14000' },
+    { name: '牛黄解毒片', code: '6901234567897', batchNumber: '20240205', tag: '3A', qty: '1500', sales: '15000.0', gp: '4500.0', gpr: '30.00%', incentiveQty: '1200', incentiveSales: '12000' },
+    { name: '清开灵颗粒', code: '6901234567898', batchNumber: '20240310', tag: '3A', qty: '1300', sales: '13000.0', gp: '3900.0', gpr: '30.00%', incentiveQty: '1000', incentiveSales: '10000' },
+    { name: '京都念慈菴蜜炼川贝枇杷膏', code: '6901234567899', batchNumber: '20240220', tag: '3A', qty: '1100', sales: '11000.0', gp: '3300.0', gpr: '30.00%', incentiveQty: '800', incentiveSales: '8000' },
+  ];
+
   const stats = [
-    { label: '重点品销售额', value: '117.42万', subValue: '146个商品', trend: '-26.55%', isUp: false, icon: <BarChart3 className="text-blue-500" size={20} /> },
-    { label: '动销商品数', value: '120', subValue: '动销率 82.19%', trend: '+5.2%', isUp: true, icon: <ShoppingBag className="text-orange-500" size={20} /> },
-    { label: '未动销商品数', value: '26', subValue: '需关注', trend: '-12.5%', isUp: false, icon: <Package className="text-gray-400" size={20} /> },
-    { label: '3A商品数', value: '50', subValue: '占比 34.25%', trend: '+2.1%', isUp: true, icon: <GraduationCap className="text-purple-500" size={20} /> },
+    { label: '四季蝉活动品销售额', value: '117.42万', subValue: '146个商品', trend: '-26.55%', isUp: false, icon: <BarChart3 className="text-blue-500" size={20} /> },
+    { label: '动销商品数', value: '120', subValue: '动销率 82.19%', trend: '+5.2%', isUp: true, icon: <ShoppingBag className="text-orange-500" size={20} />, clickable: true },
+    { label: '未动销商品数', value: '26', subValue: '需关注', trend: '-12.5%', isUp: false, icon: <Package className="text-gray-400" size={20} />, clickable: true },
+    { label: '3A商品数', value: '50', subValue: '占比 34.25%', trend: '+2.1%', isUp: true, icon: <GraduationCap className="text-purple-500" size={20} />, clickable: true },
+    { label: '3A商品销售额', value: '45.2万', subValue: '占比 12.5%', trend: '+15.8%', isUp: true, icon: <Wallet className="text-pink-500" size={20} />, clickable: true },
   ];
 
   const topSelling = [
-    { name: '感冒灵颗粒', qty: '4159盒', sales: '41174.1元', incentiveQty: '3800盒', incentiveSales: '38000元' },
-    { name: '阿莫西林胶囊', qty: '3200盒', sales: '32000.0元', incentiveQty: '3000盒', incentiveSales: '30000元' },
-    { name: '板蓝根颗粒', qty: '2800盒', sales: '28000.0元', incentiveQty: '2500盒', incentiveSales: '25000元' },
+    { name: '感冒灵颗粒', code: '6901234567890', batchNumber: '20240401', manufacturer: '华润三九医药股份有限公司', qty: '4159', sales: '41174.1元', gp: '12352.2元', gpr: '30.00%', incentiveQty: '3800', incentiveSales: '38000元', tag3A: '3A' },
+    { name: '阿莫西林胶囊', code: '6901234567891', batchNumber: '20240315', manufacturer: '华北制药股份有限公司', qty: '3200', sales: '32000.0元', gp: '9600.0元', gpr: '30.00%', incentiveQty: '3000', incentiveSales: '30000元', tag3A: '3A' },
+    { name: '板蓝根颗粒', code: '6901234567892', batchNumber: '20240405', manufacturer: '太极集团重庆涪陵制药厂', qty: '2800', sales: '28000.0元', gp: '8400.0元', gpr: '30.00%', incentiveQty: '2500', incentiveSales: '25000元', tag3A: '-' },
+    { name: '布洛芬缓释胶囊', code: '6901234567893', batchNumber: '20240210', manufacturer: '中美天津史克制药有限公司', qty: '2500', sales: '25000.0元', gp: '7500.0元', gpr: '30.00%', incentiveQty: '2200', incentiveSales: '22000元', tag3A: '3A' },
+    { name: '小儿氨酚黄那敏颗粒', code: '6901234567894', batchNumber: '20240412', manufacturer: '华润三九医药股份有限公司', qty: '2100', sales: '21000.0元', gp: '6300.0元', gpr: '30.00%', incentiveQty: '1800', incentiveSales: '18000元', tag3A: '-' },
+    { name: '维C银翘片', code: '6901234567895', batchNumber: '20240320', manufacturer: '贵州百灵企业集团制药股份有限公司', qty: '1900', sales: '19000.0元', gp: '5700.0元', gpr: '30.00%', incentiveQty: '1600', incentiveSales: '16000元', tag3A: '3A' },
+    { name: '复方草珊瑚含片', code: '6901234567896', batchNumber: '20240115', manufacturer: '江中药业股份有限公司', qty: '1700', sales: '17000.0元', gp: '5100.0元', gpr: '30.00%', incentiveQty: '1400', incentiveSales: '14000元', tag3A: '-' },
+    { name: '牛黄解毒片', code: '6901234567897', batchNumber: '20240205', manufacturer: '同仁堂', qty: '1500', sales: '15000.0元', gp: '4500.0元', gpr: '30.00%', incentiveQty: '1200', incentiveSales: '12000元', tag3A: '3A' },
+    { name: '清开灵颗粒', code: '6901234567898', batchNumber: '20240310', manufacturer: '广州白云山医药集团股份有限公司', qty: '1300', sales: '13000.0元', gp: '3900.0元', gpr: '30.00%', incentiveQty: '1000', incentiveSales: '10000元', tag3A: '-' },
+    { name: '京都念慈菴蜜炼川贝枇杷膏', code: '6901234567899', batchNumber: '20240220', manufacturer: '京都念慈菴总厂有限公司', qty: '1100', sales: '11000.0元', gp: '3300.0元', gpr: '30.00%', incentiveQty: '800', incentiveSales: '8000元', tag3A: '3A' },
   ];
 
   const nonSelling = [
-    { name: '健胃消食片', code: '6901234567890', batchNumber: '20240105', category: '消化系统', activityId: 'ACT001', activityName: '夏季清爽活动', manufacturer: '江中药业股份有限公司' },
-    { name: '维生素C泡腾片', code: '6901234567891', batchNumber: '20240212', category: '营养补充', activityId: 'ACT002', activityName: '健康季补贴', manufacturer: '拜耳医药保健有限公司' },
-    { name: '藿香正气水', code: '6901234567892', batchNumber: '20240318', category: '暑湿感冒', activityId: 'ACT003', activityName: '清凉一夏', manufacturer: '太极集团重庆涪陵制药厂' },
-    { name: '阿莫西林胶囊', code: '6901234567893', batchNumber: '20240120', category: '抗生素', activityId: 'ACT004', activityName: '秋季流感季', manufacturer: '华北制药股份有限公司' },
-    { name: '感冒灵颗粒', code: '6901234567894', batchNumber: '20240225', category: '感冒用药', activityId: 'ACT005', activityName: '家庭常备药', manufacturer: '华润三九医药股份有限公司' },
+    { 
+      name: '健胃消食片', 
+      code: '6901234567890', 
+      batchNumber: '20240105', 
+      category: '消化系统', 
+      activities: [
+        { id: 'ACT001', name: '夏季清爽活动' },
+        { id: 'ACT101', name: '全场通用直提' }
+      ],
+      manufacturer: '江中药业股份有限公司', 
+      reward: '及时豆',
+      tag3A: '3A'
+    },
+    { 
+      name: '维生素C泡腾片', 
+      code: '6901234567891', 
+      batchNumber: '20240212', 
+      category: '营养补充', 
+      activities: [{ id: 'ACT002', name: '健康季补贴' }],
+      manufacturer: '拜耳医药保健有限公司', 
+      reward: '及时豆',
+      tag3A: '3A'
+    },
+    { 
+      name: '藿香正气水', 
+      code: '6901234567892', 
+      batchNumber: '20240318', 
+      category: '暑湿感冒', 
+      activities: [{ id: 'ACT003', name: '清凉一夏' }],
+      manufacturer: '太极集团重庆涪陵制药厂', 
+      reward: '及时豆',
+      tag3A: '-'
+    },
+    { 
+      name: '阿莫西林胶囊', 
+      code: '6901234567893', 
+      batchNumber: '20240120', 
+      category: '抗生素', 
+      activities: [
+        { id: 'ACT004', name: '秋季流感季' },
+        { id: 'ACT104', name: '处方特惠专区' }
+      ],
+      manufacturer: '华北制药股份有限公司', 
+      reward: '及时豆',
+      tag3A: '3A'
+    },
+    { 
+      name: '感冒灵颗粒', 
+      code: '6901234567894', 
+      batchNumber: '20240225', 
+      category: '感冒用药', 
+      activities: [{ id: 'ACT005', name: '家庭常备药' }],
+      manufacturer: '华润三九医药股份有限公司', 
+      reward: '及时豆',
+      tag3A: '-'
+    },
+    { 
+      name: '小柴胡颗粒', 
+      code: '6901234567895', 
+      batchNumber: '20240310', 
+      category: '清热解毒', 
+      activities: [{ id: 'ACT006', name: '春季惠民' }],
+      manufacturer: '广州白云山医药集团股份有限公司', 
+      reward: '延时豆',
+      tag3A: '3A'
+    },
+    { 
+      name: '银黄颗粒', 
+      code: '6901234567896', 
+      batchNumber: '20240115', 
+      category: '呼吸系统', 
+      activities: [
+        { id: 'ACT007', name: '健康大礼包' },
+        { id: 'ACT107', name: '社区健康季' }
+      ],
+      manufacturer: '葵花药业集团股份有限公司', 
+      reward: '及时豆',
+      tag3A: '-'
+    },
+    { 
+      name: '蒲地蓝消炎片', 
+      code: '6901234567897', 
+      batchNumber: '20240205', 
+      category: '抗炎', 
+      activities: [{ id: 'ACT008', name: '关爱呼吸健康' }],
+      manufacturer: '济川药业集团有限公司', 
+      reward: '及时豆',
+      tag3A: '3A'
+    },
+    { 
+      name: '感冒止咳颗粒', 
+      code: '6901234567898', 
+      batchNumber: '20240320', 
+      category: '感冒用药', 
+      activities: [{ id: 'ACT009', name: '季末大促' }],
+      manufacturer: '四川太极药业', 
+      reward: '及时豆',
+      tag3A: '-'
+    },
+    { 
+      name: '复方感冒灵片', 
+      code: '6901234567899', 
+      batchNumber: '20240125', 
+      category: '感冒用药', 
+      activities: [{ id: 'ACT010', name: '品牌盛典' }],
+      manufacturer: '三九医药', 
+      reward: '及时豆',
+      tag3A: '3A'
+    },
   ];
 
   const risingStars = [
-    { name: '燕窝(白燕窝)', trend: '400.00%' },
-    { name: '虫草清肺胶囊', trend: '324.96%' },
-    { name: '燕窝', trend: '140.00%' },
+    { name: '燕窝(白燕窝)', code: '6901234560001', manufacturer: '厦门燕安居连锁有限公司', currentSales: '4000.00', prevSales: '800.00', currentGP: '1200.00', prevGP: '240.00', yoy: '400.00%', mom: '350.00%', tag3A: '3A' },
+    { name: '虫草清肺胶囊', code: '6901234560002', manufacturer: '吉林省通化博祥药业股份有限公司', currentSales: '3249.60', prevSales: '764.68', currentGP: '974.88', prevGP: '229.40', yoy: '324.96%', mom: '280.50%', tag3A: '3A' },
+    { name: '燕窝', code: '6901234560003', manufacturer: '同仁堂', currentSales: '2400.00', prevSales: '1000.00', currentGP: '720.00', prevGP: '300.00', yoy: '140.00%', mom: '120.00%', tag3A: '3A' },
+    { name: '灵芝孢子粉', code: '6901234560004', manufacturer: '寿仙谷', currentSales: '1985.00', prevSales: '1000.00', currentGP: '595.50', prevGP: '300.00', yoy: '98.50%', mom: '85.00%', tag3A: '-' },
+    { name: '复方阿胶浆', code: '6901234560005', manufacturer: '东阿阿胶股份有限公司', currentSales: '1852.00', prevSales: '1000.00', currentGP: '555.60', prevGP: '300.00', yoy: '85.20%', mom: '75.00%', tag3A: '3A' },
+    { name: '安神补脑液', code: '6901234560006', manufacturer: '敖东', currentSales: '1724.00', prevSales: '1000.00', currentGP: '517.20', prevGP: '300.00', yoy: '72.40%', mom: '65.00%', tag3A: '-' },
+    { name: '补中益气丸', code: '6901234560007', manufacturer: '仲景宛西制药', currentSales: '1651.50', prevSales: '1000.00', currentGP: '495.45', prevGP: '300.00', yoy: '65.15%', mom: '58.00%', tag3A: '-' },
+    { name: '参术儿康糖浆', code: '6901234560008', manufacturer: '雷允上', currentSales: '1589.00', prevSales: '1000.00', currentGP: '476.70', prevGP: '300.00', yoy: '58.90%', mom: '50.00%', tag3A: '3A' },
+    { name: '小金胶囊', code: '6901234560009', manufacturer: '健民集团', currentSales: '1523.00', prevSales: '1000.00', currentGP: '456.90', prevGP: '300.00', yoy: '52.30%', mom: '45.00%', tag3A: '-' },
+    { name: '逍遥丸', code: '6901234560010', manufacturer: '北京同仁堂', currentSales: '1481.00', prevSales: '1000.00', currentGP: '444.30', prevGP: '300.00', yoy: '48.10%', mom: '40.00%', tag3A: '3A' },
   ];
 
   const fallingStars = [
-    { name: '健脾八珍糕', trend: '-99.37%' },
-    { name: '阿莫西林克拉维酸钾干混悬剂', trend: '-98.08%' },
-    { name: '他达拉非片(仁和)', trend: '-91.47%' },
+    { name: '健脾八珍糕', code: '6901234561001', manufacturer: '北京同仁堂', currentSales: '6.30', prevSales: '1000.00', currentGP: '1.89', prevGP: '300.00', yoy: '-99.37%', mom: '-98.00%', tag3A: '3A' },
+    { name: '阿莫西林克拉维酸钾干混悬剂', code: '6901234561002', manufacturer: '先声药业', currentSales: '19.20', prevSales: '1000.00', currentGP: '5.76', prevGP: '300.00', yoy: '-98.08%', mom: '-97.00%', tag3A: '3A' },
+    { name: '他达拉非片(仁和)', code: '6901234561003', manufacturer: '仁和药业', currentSales: '85.30', prevSales: '1000.00', currentGP: '25.59', prevGP: '300.00', yoy: '-91.47%', mom: '-90.00%', tag3A: '3A' },
+    { name: '六味地黄丸', code: '6901234561004', manufacturer: '仲景宛西制药', currentSales: '148.00', prevSales: '1000.00', currentGP: '44.40', prevGP: '300.00', yoy: '-85.20%', mom: '-82.00%', tag3A: '-' },
+    { name: '知柏地黄丸', code: '6901234561005', manufacturer: '北京同仁堂', currentSales: '216.00', prevSales: '1000.00', currentGP: '64.80', prevGP: '300.00', yoy: '-78.40%', mom: '-75.00%', tag3A: '-' },
+    { name: '归脾丸', code: '6901234561006', manufacturer: '九芝堂', currentSales: '278.50', prevSales: '1000.00', currentGP: '83.55', prevGP: '300.00', yoy: '-72.15%', mom: '-70.00%', tag3A: '-' },
+    { name: '右旋糖酐铁口服液', code: '6901234561007', manufacturer: '哈药六厂', currentSales: '341.00', prevSales: '1000.00', currentGP: '102.30', prevGP: '300.00', yoy: '-65.90%', mom: '-62.00%', tag3A: '3A' },
+    { name: '多维元素片', code: '6901234561008', manufacturer: '惠氏', currentSales: '417.00', prevSales: '1000.00', currentGP: '125.10', prevGP: '300.00', yoy: '-58.30%', mom: '-55.00%', tag3A: '-' },
+    { name: '葡萄糖酸钙口服溶液', code: '6901234561009', manufacturer: '三精制药', currentSales: '479.00', prevSales: '1000.00', currentGP: '143.70', prevGP: '300.00', yoy: '-52.10%', mom: '-50.00%', tag3A: '-' },
+    { name: '维生素AD滴剂', code: '6901234561010', manufacturer: '伊可新', currentSales: '545.00', prevSales: '1000.00', currentGP: '163.50', prevGP: '300.00', yoy: '-45.50%', mom: '-42.00%', tag3A: '3A' },
   ];
 
   return (
@@ -339,14 +621,33 @@ const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: stri
     >
       {/* Module Title */}
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-bold text-gray-800">品种维度</h2>
+        <div className="flex items-center space-x-4">
+          <h2 className="text-lg font-bold text-gray-800">品种维度</h2>
+          <button className="flex items-center px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors shadow-sm">
+            <Download size={12} className="mr-1.5" />
+            导出所有数据
+          </button>
+        </div>
         <div className="text-xs text-gray-400">数据更新时间: 2026-03-18 08:31</div>
       </div>
 
-      {/* Header Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      {/* Global stats and tables below */}
+      <div className="grid grid-cols-5 gap-4">
         {stats.map((stat, idx) => (
-          <div key={idx} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <div 
+            key={idx} 
+            onClick={() => {
+              if (stat.label === '动销商品数') {
+                topSellingRef.current?.scrollIntoView({ behavior: 'smooth' });
+              } else if (stat.label === '未动销商品数') {
+                nonSellingRef.current?.scrollIntoView({ behavior: 'smooth' });
+              } else if (stat.clickable) {
+                setModalTitle(stat.label);
+                setShow3AModal(true);
+              }
+            }}
+            className={`bg-white p-4 rounded-xl border border-gray-200 shadow-sm transition-all ${stat.clickable ? 'cursor-pointer hover:shadow-md hover:border-blue-200 ring-offset-2 hover:ring-2 ring-blue-100' : 'hover:shadow-md'}`}
+          >
             <div className="flex justify-between items-start">
               <div className="p-2 bg-gray-50 rounded-lg">{stat.icon}</div>
               <div className={`text-xs font-medium flex items-center ${stat.isUp ? 'text-green-500' : 'text-red-500'}`}>
@@ -365,35 +666,87 @@ const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: stri
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        {/* Top Selling */}
-        <div className="col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-            <h3 className="font-bold text-gray-700 flex items-center">
-              <BarChart3 size={16} className="mr-2 text-blue-500" />
-              动销商品前三名
-            </h3>
-            <span className="text-xs text-gray-400">11月数据统计</span>
+      {/* Trends side by side */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Rising Trend */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-[480px]">
+          <div className="px-4 py-3 border-b border-gray-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-1.5 h-4 bg-green-500 rounded-full mr-2"></div>
+                <h3 className="font-bold text-gray-700 text-sm">销售趋势上升榜</h3>
+              </div>
+              <button className="text-blue-600 hover:text-blue-700">
+                <Download size={14} />
+              </button>
+            </div>
+            
+            <div className="flex items-center justify-between space-x-2">
+              <div className="flex bg-gray-100 p-0.5 rounded text-[10px] flex-1">
+                {['按销售金额', '按毛利额'].map(m => (
+                  <button 
+                    key={m}
+                    onClick={() => setTrendMetric(m)}
+                    className={`flex-1 py-1 rounded transition-all ${trendMetric === m ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-500'}`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+              <div className="flex bg-gray-100 p-0.5 rounded text-[10px] w-24">
+                {['同比', '环比'].map(c => (
+                  <button 
+                    key={c}
+                    onClick={() => setTrendComparison(c)}
+                    className={`flex-1 py-1 rounded transition-all ${trendComparison === c ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-500'}`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="p-0">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 text-gray-500 text-[11px] uppercase tracking-wider">
-                <tr>
-                  <th className="px-4 py-2 font-medium">商品名称</th>
-                  <th className="px-4 py-2 font-medium">销售数量</th>
-                  <th className="px-4 py-2 font-medium">销售金额</th>
-                  <th className="px-4 py-2 font-medium">激励销售数量</th>
-                  <th className="px-4 py-2 font-medium">激励销售金额</th>
+          <div className="p-0 overflow-x-auto flex-1 custom-scrollbar">
+            <table className="w-full text-left text-xs min-w-[1000px]">
+              <thead className="bg-gray-50 text-gray-500 font-medium sticky top-0 z-10">
+                <tr className="border-b border-gray-100">
+                  <th className="px-3 py-2 w-10 text-center">排名</th>
+                  <th className="px-3 py-2 min-w-[120px]">商品名称</th>
+                  <th className="px-3 py-2">商品编码</th>
+                  <th className="px-3 py-2 text-center">3A标识</th>
+                  <th className="px-3 py-2 min-w-[150px]">生产厂家</th>
+                  <th className="px-3 py-2">本期销售</th>
+                  <th className="px-3 py-2">上期销售</th>
+                  <th className="px-3 py-2">本期毛利</th>
+                  <th className="px-3 py-2">上期毛利</th>
+                  <th className="px-3 py-2 font-bold text-green-600">{trendComparison === '同比' ? '同比比例' : '环比比例'}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {topSelling.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-700">{item.name}</td>
-                    <td className="px-4 py-3 text-gray-600">{item.qty}</td>
-                    <td className="px-4 py-3 text-blue-600 font-medium">{item.sales}</td>
-                    <td className="px-4 py-3 text-gray-600">{item.incentiveQty}</td>
-                    <td className="px-4 py-3 text-orange-600 font-medium">{item.incentiveSales}</td>
+              <tbody className="divide-y divide-gray-50">
+                {risingStars.map((star, idx) => (
+                  <tr key={idx} className="hover:bg-green-50/50 transition-colors group">
+                    <td className="px-3 py-2.5 text-center">
+                      <span className={`w-5 h-5 flex items-center justify-center rounded text-[10px] mx-auto ${idx < 3 ? 'bg-green-100 text-green-700 font-bold' : 'bg-gray-100 text-gray-500'}`}>
+                        {idx + 1}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 font-medium text-gray-700 truncate max-w-[120px]" title={star.name}>{star.name}</td>
+                    <td className="px-3 py-2.5 text-gray-400 font-mono text-[10px]">{star.code}</td>
+                    <td className="px-3 py-2.5 text-center">
+                      {star.tag3A === '3A' ? (
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-100 rounded">
+                          3A
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-gray-500 truncate max-w-[150px]" title={star.manufacturer}>{star.manufacturer}</td>
+                    <td className="px-3 py-2.5 text-gray-600 font-medium">¥{star.currentSales}</td>
+                    <td className="px-3 py-2.5 text-gray-400">¥{star.prevSales}</td>
+                    <td className="px-3 py-2.5 text-gray-600 font-medium">¥{star.currentGP}</td>
+                    <td className="px-3 py-2.5 text-gray-400">¥{star.prevGP}</td>
+                    <td className="px-3 py-2.5 font-bold text-green-600">+{trendComparison === '同比' ? star.yoy : star.mom}</td>
                   </tr>
                 ))}
               </tbody>
@@ -401,85 +754,269 @@ const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: stri
           </div>
         </div>
 
-        {/* Trends */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center">
-              <div className="w-1.5 h-4 bg-green-500 rounded-full mr-2"></div>
-              <h3 className="font-bold text-gray-700 text-sm">销售趋势上升榜</h3>
+        {/* Falling Trend */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-[480px]">
+          <div className="px-4 py-3 border-b border-gray-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-1.5 h-4 bg-red-500 rounded-full mr-2"></div>
+                <h3 className="font-bold text-gray-700 text-sm">销售趋势下降榜</h3>
+              </div>
+              <button className="text-blue-600 hover:text-blue-700">
+                <Download size={14} />
+              </button>
             </div>
-            <div className="p-3 space-y-2">
-              {risingStars.map((star, idx) => (
-                <div key={idx} className="flex justify-between items-center p-2 hover:bg-green-50 rounded-lg transition-colors">
-                  <span className="text-sm text-gray-600">{star.name}</span>
-                  <span className="text-sm font-bold text-green-600">+{star.trend}</span>
-                </div>
-              ))}
+
+            <div className="flex items-center justify-between space-x-2">
+              <div className="flex bg-gray-100 p-0.5 rounded text-[10px] flex-1">
+                {['按销售金额', '按毛利额'].map(m => (
+                  <button 
+                    key={m}
+                    onClick={() => setTrendMetric(m)}
+                    className={`flex-1 py-1 rounded transition-all ${trendMetric === m ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-500'}`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+              <div className="flex bg-gray-100 p-0.5 rounded text-[10px] w-24">
+                {['同比', '环比'].map(c => (
+                  <button 
+                    key={c}
+                    onClick={() => setTrendComparison(c)}
+                    className={`flex-1 py-1 rounded transition-all ${trendComparison === c ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-500'}`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center">
-              <div className="w-1.5 h-4 bg-red-500 rounded-full mr-2"></div>
-              <h3 className="font-bold text-gray-700 text-sm">销售趋势下降榜</h3>
-            </div>
-            <div className="p-3 space-y-2">
-              {fallingStars.map((star, idx) => (
-                <div key={idx} className="flex justify-between items-center p-2 hover:bg-red-50 rounded-lg transition-colors">
-                  <span className="text-sm text-gray-600">{star.name}</span>
-                  <span className="text-sm font-bold text-red-600">{star.trend}</span>
-                </div>
-              ))}
-            </div>
+          <div className="p-0 overflow-x-auto flex-1 custom-scrollbar">
+            <table className="w-full text-left text-xs min-w-[1000px]">
+              <thead className="bg-gray-50 text-gray-500 font-medium sticky top-0 z-10">
+                <tr className="border-b border-gray-100">
+                  <th className="px-3 py-2 w-10 text-center">排名</th>
+                  <th className="px-3 py-2 min-w-[120px]">商品名称</th>
+                  <th className="px-3 py-2">商品编码</th>
+                  <th className="px-3 py-2 text-center">3A标识</th>
+                  <th className="px-3 py-2 min-w-[150px]">生产厂家</th>
+                  <th className="px-3 py-2">本期销售</th>
+                  <th className="px-3 py-2">上期销售</th>
+                  <th className="px-3 py-2">本期毛利</th>
+                  <th className="px-3 py-2">上期毛利</th>
+                  <th className="px-3 py-2 font-bold text-red-600">{trendComparison === '同比' ? '同比比例' : '环比比例'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {fallingStars.map((star, idx) => (
+                  <tr key={idx} className="hover:bg-red-50/50 transition-colors group">
+                    <td className="px-3 py-2.5 text-center">
+                      <span className={`w-5 h-5 flex items-center justify-center rounded text-[10px] mx-auto ${idx < 3 ? 'bg-red-100 text-red-700 font-bold' : 'bg-gray-100 text-gray-500'}`}>
+                        {idx + 1}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 font-medium text-gray-700 truncate max-w-[120px]" title={star.name}>{star.name}</td>
+                    <td className="px-3 py-2.5 text-gray-400 font-mono text-[10px]">{star.code}</td>
+                    <td className="px-3 py-2.5 text-center">
+                      {star.tag3A === '3A' ? (
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-100 rounded">
+                          3A
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-gray-500 truncate max-w-[150px]" title={star.manufacturer}>{star.manufacturer}</td>
+                    <td className="px-3 py-2.5 text-gray-600 font-medium">¥{star.currentSales}</td>
+                    <td className="px-3 py-2.5 text-gray-400">¥{star.prevSales}</td>
+                    <td className="px-3 py-2.5 text-gray-600 font-medium">¥{star.currentGP}</td>
+                    <td className="px-3 py-2.5 text-gray-400">¥{star.prevGP}</td>
+                    <td className="px-3 py-2.5 font-bold text-red-600">{trendComparison === '同比' ? star.yoy : star.mom}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      {/* Non-Selling List */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Top Selling - Moved to full width row */}
+      <div ref={topSellingRef} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden scroll-mt-20">
         <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
           <h3 className="font-bold text-gray-700 flex items-center">
-            <Package size={16} className="mr-2 text-gray-400" />
-            未动销商品列表 (26个)
+            <BarChart3 size={16} className="mr-2 text-blue-500" />
+            动销商品前十名
           </h3>
+          <div className="flex items-center space-x-3">
+            <span className="text-xs text-gray-400">11月数据统计</span>
+            <button className="flex items-center px-2 py-1 border border-blue-200 text-blue-600 rounded text-[10px] hover:bg-blue-50 transition-colors">
+              <Download size={10} className="mr-1" />
+              导出
+            </button>
+          </div>
+        </div>
+        <div className="p-0">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 text-gray-500 text-[11px] uppercase tracking-wider">
+              <tr>
+                <th className="px-4 py-2 font-medium min-w-[120px]">商品名称</th>
+                <th className="px-4 py-2 font-medium text-center">3A标识</th>
+                <th className="px-4 py-2 font-medium">商品编码</th>
+                <th className="px-4 py-2 font-medium">商品批号</th>
+                <th className="px-4 py-2 font-medium min-w-[150px]">生产厂家</th>
+                <th className="px-4 py-2 font-medium">
+                  <div className="flex items-center cursor-pointer hover:text-blue-600 transition-colors">
+                    销售数量(盒)
+                    <ArrowUpDown size={10} className="ml-1 opacity-70" />
+                  </div>
+                </th>
+                <th className="px-4 py-2 font-medium">
+                  <div className="flex items-center cursor-pointer hover:text-blue-600 transition-colors">
+                    销售金额
+                    <ArrowUpDown size={10} className="ml-1 opacity-70" />
+                  </div>
+                </th>
+                <th className="px-4 py-2 font-medium">
+                  <div className="flex items-center cursor-pointer hover:text-blue-600 transition-colors">
+                    毛利额
+                    <ArrowUpDown size={10} className="ml-1 opacity-70" />
+                  </div>
+                </th>
+                <th className="px-4 py-2 font-medium">
+                  <div className="flex items-center cursor-pointer hover:text-blue-600 transition-colors">
+                    毛利率
+                    <ArrowUpDown size={10} className="ml-1 opacity-70" />
+                  </div>
+                </th>
+                <th className="px-4 py-2 font-medium">
+                  <div className="flex items-center cursor-pointer hover:text-blue-600 transition-colors">
+                    激励销售数量(盒)
+                    <ArrowUpDown size={10} className="ml-1 opacity-70" />
+                  </div>
+                </th>
+                <th className="px-4 py-2 font-medium">
+                  <div className="flex items-center cursor-pointer hover:text-blue-600 transition-colors">
+                    激励销售金额
+                    <ArrowUpDown size={10} className="ml-1 opacity-70" />
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {topSelling.map((item, idx) => (
+                <tr key={idx} className="hover:bg-gray-50 transition-colors text-xs">
+                  <td className="px-4 py-3 font-medium text-gray-700 truncate max-w-[120px]" title={item.name}>{item.name}</td>
+                  <td className="px-4 py-3 text-gray-400 font-mono text-[10px]">{item.code}</td>
+                  <td className="px-4 py-3 text-center">
+                    {item.tag3A === '3A' ? (
+                      <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-100 rounded">
+                        3A
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-blue-400 bg-blue-50/50 px-1 rounded inline-block my-2 mx-4">{item.batchNumber}</td>
+                  <td className="px-4 py-3 text-gray-500 truncate max-w-[150px]" title={item.manufacturer}>{item.manufacturer}</td>
+                  <td className="px-4 py-3 text-gray-600">{item.qty}</td>
+                  <td className="px-4 py-3 text-blue-600 font-medium">{item.sales}</td>
+                  <td className="px-4 py-3 text-green-600 font-medium">{item.gp}</td>
+                  <td className="px-4 py-3 text-green-600 font-medium">{item.gpr}</td>
+                  <td className="px-4 py-3 text-gray-600">{item.incentiveQty}</td>
+                  <td className="px-4 py-3 text-orange-600 font-medium">{item.incentiveSales}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Non-Selling List */}
+      <div ref={nonSellingRef} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden scroll-mt-20">
+        <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <h3 className="font-bold text-gray-700 flex items-center">
+              <Package size={16} className="mr-2 text-gray-400" />
+              未动销商品列表 (26个)
+            </h3>
+            <button className="flex items-center px-2 py-1 bg-gray-100 text-gray-600 rounded text-[10px] hover:bg-gray-200 transition-colors">
+              <Download size={10} className="mr-1" />
+              导出全部
+            </button>
+          </div>
           <button className="text-xs text-blue-600 hover:underline">查看全部</button>
         </div>
         <div className="p-0">
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 text-gray-500 text-[11px] uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-2 font-medium">商品名称/编码/批号</th>
+                <th className="px-4 py-2 font-medium min-w-[120px]">商品名称</th>
+                <th className="px-4 py-2 font-medium text-center">3A标识</th>
+                <th className="px-4 py-2 font-medium">商品编码</th>
+                <th className="px-4 py-2 font-medium">商品批号</th>
+                <th className="px-4 py-2 font-medium min-w-[150px]">生产厂家</th>
                 <th className="px-4 py-2 font-medium">所属品类</th>
                 <th className="px-4 py-2 font-medium">配置活动ID</th>
                 <th className="px-4 py-2 font-medium">活动名称</th>
-                <th className="px-4 py-2 font-medium">活动厂家</th>
+                <th className="px-4 py-2 font-medium">奖励内容</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {nonSelling.map((item, idx) => (
-                <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-gray-700">{item.name}</div>
-                    <div className="flex items-center space-x-2 mt-0.5">
-                      <span className="text-[10px] text-gray-400">编码: {item.code}</span>
-                      <span className="text-[10px] text-blue-400 bg-blue-50 px-1 rounded">批号: {item.batchNumber}</span>
-                    </div>
+                <tr key={idx} className="hover:bg-gray-50 transition-colors text-xs">
+                  <td className="px-4 py-3 font-medium text-gray-700 truncate max-w-[120px]" title={item.name}>{item.name}</td>
+                  <td className="px-4 py-3 text-gray-400 font-mono text-[10px]">{item.code}</td>
+                  <td className="px-4 py-3 text-center">
+                    {item.tag3A === '3A' ? (
+                      <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-100 rounded">
+                        3A
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
                   </td>
+                  <td className="px-4 py-3">
+                    <span className="text-[10px] text-blue-400 bg-blue-50 px-1 rounded inline-block my-1">
+                      {item.batchNumber}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 truncate max-w-[150px]" title={item.manufacturer}>{item.manufacturer}</td>
                   <td className="px-4 py-3 text-gray-600">{item.category}</td>
                   <td className="px-4 py-3">
-                    <button 
-                      onClick={() => onActivityClick?.(item.activityId)}
-                      className="text-gray-500 font-mono text-xs hover:text-blue-600 hover:underline"
-                    >
-                      {item.activityId}
-                    </button>
+                    <div className="flex flex-col space-y-1">
+                      {item.activities.map((act, actIdx) => (
+                        <button 
+                          key={actIdx}
+                          onClick={() => onActivityClick?.(act.id)}
+                          className="text-gray-500 font-mono text-[10px] hover:text-blue-600 hover:underline text-left block"
+                        >
+                          {act.id}
+                        </button>
+                      ))}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
-                    <button 
-                      onClick={() => onActivityClick?.(item.activityId)}
-                      className="text-blue-600 hover:underline text-left"
-                    >
-                      {item.activityName}
-                    </button>
+                    <div className="flex flex-col space-y-1">
+                      {item.activities.map((act, actIdx) => (
+                        <button 
+                          key={actIdx}
+                          onClick={() => onActivityClick?.(act.id)}
+                          className="text-blue-600 hover:underline text-left text-xs line-clamp-1"
+                        >
+                          {act.name}
+                        </button>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col items-center justify-center">
+                      <div 
+                        className={`w-5 h-4 mb-0.5 rounded-full shadow-sm ${item.reward === '延时豆' ? 'bg-[#9FEF70]' : 'bg-[#FECB45]'} rotate-[-20deg]`}
+                        style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))' }}
+                      />
+                      <span className="text-[12px] text-gray-700">{item.reward}</span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-gray-600 text-xs">{item.manufacturer}</td>
                 </tr>
@@ -489,6 +1026,107 @@ const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: stri
           <Pagination total={4120} currentPage={1} onPageChange={(p) => console.log(p)} />
         </div>
       </div>
+
+      {/* 3A Details Modal */}
+      <AnimatePresence>
+        {show3AModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden"
+            >
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                    <GraduationCap size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800">{modalTitle} 明细</h3>
+                    <p className="text-xs text-gray-400">统计范围：四季蝉活动品种</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <button 
+                    onClick={() => {
+                      alert('正在生成列表数据...');
+                      setTimeout(() => alert('下载成功！'), 1000);
+                    }}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    <Download size={14} className="mr-2" />
+                    下载列表数据
+                  </button>
+                  <button 
+                    onClick={() => setShow3AModal(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-auto p-0 scrollbar-hide">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead className="bg-gray-50 text-gray-500 text-[11px] uppercase tracking-wider sticky top-0 z-10">
+                    <tr className="border-b border-gray-100">
+                      <th className="px-6 py-4 font-medium">商品名称</th>
+                      <th className="px-6 py-4 font-medium">商品编码</th>
+                      <th className="px-6 py-4 font-medium">商品批号</th>
+                      <th className="px-6 py-4 font-medium text-center">3A标识</th>
+                      <th className="px-6 py-4 font-medium text-right">销售数量</th>
+                      <th className="px-6 py-4 font-medium text-right">销售金额</th>
+                      <th className="px-6 py-4 font-medium text-right">毛利额</th>
+                      <th className="px-6 py-4 font-medium text-right">毛利率</th>
+                      <th className="px-6 py-4 font-medium text-right">激励销售数量</th>
+                      <th className="px-6 py-4 font-medium text-right">激励销售金额</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 bg-white">
+                    {threeAProducts.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-blue-50/30 transition-colors group">
+                        <td className="px-6 py-4 font-semibold text-gray-800">
+                          {item.name}
+                        </td>
+                        <td className="px-6 py-4 text-gray-500 font-mono text-[10px]">{item.code}</td>
+                        <td className="px-6 py-4">
+                          <span className="text-[10px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                            {item.batchNumber}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="inline-flex items-center justify-center px-2 py-1 text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-100 rounded">
+                            {item.tag}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right font-medium text-gray-700">{item.qty}</td>
+                        <td className="px-6 py-4 text-right font-semibold text-gray-900 text-sm">¥{parseFloat(item.sales).toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right text-gray-600">¥{parseFloat(item.gp).toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right font-medium text-green-600">{item.gpr}</td>
+                        <td className="px-6 py-4 text-right text-gray-700">{item.incentiveQty}</td>
+                        <td className="px-6 py-4 text-right font-semibold text-blue-600">¥{parseFloat(item.incentiveSales).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                <div className="text-xs text-gray-400">
+                  共显示 {threeAProducts.length} 条数据
+                </div>
+                <button 
+                  onClick={() => setShow3AModal(false)}
+                  className="px-6 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-white transition-colors"
+                >
+                  关闭
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
@@ -1134,42 +1772,68 @@ const MyActivitiesView = ({ onDetailClick, onCreateClick }: { onDetailClick: (id
   );
 };
 
-const ActivityDimensionView = () => {
+const ActivityDimensionView = ({ onActivityClick }: { onActivityClick?: (id: string) => void }) => {
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+
   const activityStats = [
-    { title: '单品活动', total: 150, active: 120, color: 'blue' },
-    { title: '疗程活动', total: 80, active: 60, color: 'orange' },
-    { title: '固定关联', total: 45, active: 30, color: 'green' },
-    { title: '系列激励', total: 60, active: 40, color: 'purple' },
-    { title: '高频带低频激励', total: 35, active: 20, color: 'pink' },
-    { title: '高频带系列激励', total: 25, active: 15, color: 'indigo' },
+    { title: '单品销售激励', total: 150, active: 120, color: 'blue' },
+    { title: '单品疗程销售激励', total: 80, active: 60, color: 'orange' },
+    { title: '关联销售激励', total: 45, active: 30, color: 'green' },
+    { title: '组合目标达成激励', total: 60, active: 40, color: 'purple' },
+    { title: '单品目标达成激励', total: 35, active: 20, color: 'pink' },
+    { title: '系列目标达成激励', total: 25, active: 15, color: 'indigo' },
   ];
+
+  const mockDetails = [
+    { name: '感冒灵颗粒', code: '6901234567890', category: '感冒用药', activityId: 'ACT001', activityName: '夏季清爽活动', manufacturer: '华润三九医药股份有限公司', activityManufacturer: '小姆供应商', status: '有动销', tag3A: '3A' },
+    { name: '阿莫西林胶囊', code: '6901234567891', category: '抗生素', activityId: 'ACT002', activityName: '健康季补贴', manufacturer: '华北制药股份有限公司', activityManufacturer: '华北制药', status: '有动销', tag3A: '3A' },
+    { name: '板蓝根颗粒', code: '6901234567892', category: '感冒用药', activityId: 'ACT003', activityName: '清凉一夏', manufacturer: '太极集团重庆涪陵制药厂', activityManufacturer: '太极集团', status: '有动销', tag3A: '-' },
+    { name: '布洛芬缓释胶囊', code: '6901234567893', category: '解热镇痛', activityId: 'ACT004', activityName: '秋季流感季', manufacturer: '中美天津史克制药有限公司', activityManufacturer: '中美史克', status: '无动销', tag3A: '3A' },
+    { name: '小儿氨酚黄那敏颗粒', code: '6901234567894', category: '儿童用药', activityId: 'ACT005', activityName: '家庭常备药', manufacturer: '华润三九医药股份有限公司', activityManufacturer: '三九医药', status: '有动销', tag3A: '-' },
+    { name: '维C银翘片', code: '6901234567895', category: '感冒用药', activityId: 'ACT006', activityName: '冬季呵护', manufacturer: '贵州百灵企业集团制药股份有限公司', activityManufacturer: '贵州百灵', status: '无动销', tag3A: '3A' },
+  ];
+
+  const openDetails = (title: string) => {
+    setModalTitle(title);
+    setShowDetailsModal(true);
+  };
 
   return (
     <div className="p-4 space-y-4 bg-gray-50 min-h-full">
       <div className="grid grid-cols-3 gap-4">
         {activityStats.map((stat, idx) => (
           <div key={idx} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-center mb-4">
+            <div className="mb-4">
               <h3 className="font-bold text-gray-700">{stat.title}</h3>
-              <span className={`px-2 py-1 rounded text-[10px] font-medium bg-${stat.color}-50 text-${stat.color}-600`}>
-                活动中
-              </span>
             </div>
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <div className="text-xs text-gray-400 mb-1">商品总数</div>
-                <div className="text-xl font-bold text-gray-800">{stat.total}</div>
-              </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <div className="text-xs text-gray-400 mb-1">动销商品</div>
-                <div className="text-xl font-bold text-blue-600">{stat.active}</div>
-              </div>
+              <button 
+                onClick={() => openDetails(`${stat.title} - 商品总数`)}
+                className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer group"
+              >
+                <div className="text-xs text-gray-400 mb-1 group-hover:text-blue-500">商品总数</div>
+                <div className="text-xl font-bold text-gray-800 group-hover:text-blue-600">{stat.total}</div>
+              </button>
+              <button 
+                onClick={() => openDetails(`${stat.title} - 动销商品`)}
+                className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer group"
+              >
+                <div className="text-xs text-gray-400 mb-1 group-hover:text-blue-500">动销商品</div>
+                <div className="text-xl font-bold text-blue-600 group-hover:underline">{stat.active}</div>
+              </button>
             </div>
             <div className="flex justify-between items-center pt-2 border-t border-gray-50">
-              <div className="text-xs text-gray-400">
-                未动销: <span className="text-red-400 font-medium">{stat.total - stat.active}</span>
-              </div>
-              <button className="text-xs text-blue-600 hover:underline flex items-center">
+              <button 
+                onClick={() => openDetails(`${stat.title} - 未动销商品`)}
+                className="text-xs text-gray-400 hover:text-red-500 transition-colors cursor-pointer group"
+              >
+                未动销: <span className="text-red-400 font-medium group-hover:underline">{stat.total - stat.active}</span>
+              </button>
+              <button 
+                onClick={() => openDetails(stat.title)}
+                className="text-xs text-blue-600 hover:underline flex items-center"
+              >
                 查看明细 <ChevronRight size={12} className="ml-0.5" />
               </button>
             </div>
@@ -1179,61 +1843,215 @@ const ActivityDimensionView = () => {
         {/* Ranking Incentive Card */}
         <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
           <div>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-gray-700">排名激励</h3>
-              <span className="px-2 py-1 rounded text-[10px] font-medium bg-yellow-50 text-yellow-600">
-                激励中
-              </span>
+            <div className="mb-4">
+              <h3 className="font-bold text-gray-700">排名激励政策</h3>
             </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">单品排名激励</span>
-                <span className="font-bold text-gray-700">4个</span>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <button 
+                onClick={() => openDetails('排名激励政策 - 商品总数')}
+                className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer group"
+              >
+                <div className="text-xs text-gray-400 mb-1 group-hover:text-blue-500">商品总数</div>
+                <div className="text-xl font-bold text-gray-800 group-hover:text-blue-600">40</div>
+              </button>
+              <button 
+                onClick={() => openDetails('排名激励政策 - 动销商品')}
+                className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer group"
+              >
+                <div className="text-xs text-gray-400 mb-1 group-hover:text-blue-500">动销商品</div>
+                <div className="text-xl font-bold text-blue-600 group-hover:underline">32</div>
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-sm group">
+                <span className="text-gray-500 scale-90 origin-left">单品排名激励</span>
+                <button 
+                  onClick={() => openDetails('单品排名激励')}
+                  className="font-bold text-blue-600 hover:underline cursor-pointer"
+                >
+                  4个
+                </button>
               </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">销售周排名激励</span>
-                <span className="font-bold text-gray-700">3个</span>
+              <div className="flex justify-between items-center text-sm group">
+                <span className="text-gray-500 scale-90 origin-left">系列排名激励</span>
+                <button 
+                  onClick={() => openDetails('系列排名激励')}
+                  className="font-bold text-blue-600 hover:underline cursor-pointer"
+                >
+                  2个
+                </button>
               </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">销售月排名激励</span>
-                <span className="font-bold text-gray-700">3个</span>
+              <div className="flex justify-between items-center text-sm group">
+                <span className="text-gray-500 scale-90 origin-left">销售周排名激励</span>
+                <button 
+                  onClick={() => openDetails('销售周排名激励')}
+                  className="font-bold text-blue-600 hover:underline cursor-pointer"
+                >
+                  3个
+                </button>
+              </div>
+              <div className="flex justify-between items-center text-sm group">
+                <span className="text-gray-500 scale-90 origin-left">销售月排名激励</span>
+                <button 
+                  onClick={() => openDetails('销售月排名激励')}
+                  className="font-bold text-blue-600 hover:underline cursor-pointer"
+                >
+                  3个
+                </button>
+              </div>
+              <div className="flex justify-between items-center text-sm group">
+                <span className="text-gray-500 scale-90 origin-left">早鸟激励</span>
+                <button 
+                  onClick={() => openDetails('早鸟激励')}
+                  className="font-bold text-blue-600 hover:underline cursor-pointer"
+                >
+                  1个
+                </button>
               </div>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center">
-            <div className="text-xs text-gray-400">
-              总计: <span className="text-gray-800 font-bold">10个</span>
+            <div className="flex flex-col gap-1">
+              <button 
+                onClick={() => openDetails('排名激励政策 - 未动销商品')}
+                className="text-[10px] text-gray-400 hover:text-red-500 transition-colors cursor-pointer text-left group"
+              >
+                未动销: <span className="text-red-400 font-medium group-hover:underline">8</span>
+              </button>
             </div>
-            <button className="text-xs text-blue-600 hover:underline flex items-center">
+            <button 
+              onClick={() => openDetails('排名激励政策')}
+              className="text-xs text-blue-600 hover:underline flex items-center"
+            >
               查看明细 <ChevronRight size={12} className="ml-0.5" />
             </button>
           </div>
         </div>
       </div>
+
+      {/* Details Modal */}
+      {showDetailsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[85vh] flex flex-col"
+          >
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
+              <div className="flex items-center space-x-4">
+                <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                  <FileText size={20} className="mr-2 text-blue-500" />
+                  {modalTitle} - 活动明细
+                </h3>
+                <button className="flex items-center px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs hover:bg-blue-100 transition-colors border border-blue-200">
+                  <Download size={12} className="mr-1" />
+                  下载报表
+                </button>
+              </div>
+              <button onClick={() => setShowDetailsModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 flex-1 overflow-y-auto">
+              <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-4">商品名称</th>
+                      <th className="px-4 py-4">商品编码</th>
+                      <th className="px-4 py-4">生产厂家</th>
+                      <th className="px-4 py-4">3A标识</th>
+                      <th className="px-4 py-4">所属品类</th>
+                      <th className="px-4 py-4">动销状态</th>
+                      <th className="px-4 py-4">配置活动ID</th>
+                      <th className="px-4 py-4">活动名称</th>
+                      <th className="px-4 py-4">活动厂家</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {mockDetails.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
+                        <td className="px-4 py-4 font-medium text-gray-800">{item.name}</td>
+                        <td className="px-4 py-4 text-gray-600 font-mono text-xs">{item.code}</td>
+                        <td className="px-4 py-4 text-gray-500 text-xs">{item.manufacturer}</td>
+                        <td className="px-4 py-4 text-center">
+                          {item.tag3A === '3A' ? (
+                            <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-100 rounded">
+                              3A
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-gray-600">{item.category}</td>
+                        <td className="px-4 py-4">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                            item.status === '有动销' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-gray-500 font-mono text-xs">{item.activityId}</td>
+                        <td className="px-4 py-4">
+                          <button 
+                            onClick={() => {
+                              setShowDetailsModal(false);
+                              onActivityClick?.(item.activityId);
+                            }}
+                            className="text-blue-600 hover:underline text-left font-medium"
+                          >
+                            {item.activityName}
+                          </button>
+                        </td>
+                        <td className="px-4 py-4 text-gray-500 text-xs">{item.activityManufacturer}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end bg-gray-50/50 rounded-b-xl">
+              <button 
+                onClick={() => setShowDetailsModal(false)}
+                className="px-6 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+              >
+                关闭
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
 
 // --- Incentive Distribution View Component ---
 
-const IncentiveDistributionView = () => {
+const IncentiveDistributionView = ({ 
+  onNavigateToDetails 
+}: { 
+  onNavigateToDetails?: (filters: { startDate: string, endDate: string, rewardType: string }) => void 
+}) => {
   const overallStats = [
-    { label: '10月累计发放', value: '328677.5元', date: '截止11月17日', icon: <BarChart3 className="text-blue-500" size={20} /> },
-    { label: '11月累计发放', value: '11421.37元', date: '截止11月17日', icon: <ShoppingBag className="text-orange-500" size={20} /> },
-    { label: '累计未提现', value: '0元', date: '无累计', icon: <Package className="text-gray-400" size={20} /> },
-    { label: '当前活动类型', value: '延时豆', date: '活动中', icon: <Leaf className="text-green-500" size={20} /> },
+    { label: '总实发金额', value: '340,098.87元', date: '截止11月17日', icon: <BarChart3 className="text-blue-500" size={20} />, type: '' },
+    { label: '及时豆实发金额', value: '11,421.37元', date: '截止11月17日', icon: <ShoppingBag className="text-orange-500" size={20} />, type: '及时豆' },
+    { label: '延时豆实发金额', value: '328,677.5元', date: '截止11月17日', icon: <Leaf className="text-green-500" size={20} />, type: '延时豆' },
   ];
 
   const employeeTop3 = [
-    { name: '王艳玲', amount: '94.5' },
-    { name: '常青', amount: '93.3' },
-    { name: '杨艳丽', amount: '75.6' },
+    { name: '王艳玲', code: 'EMP001', store: '团结大街一店', amount: '94.5' },
+    { name: '常青', code: 'EMP042', store: '曲石大龙井店', amount: '93.3' },
+    { name: '杨艳丽', code: 'EMP108', store: '秀峰店', amount: '75.6' },
   ];
 
   const storeTop3 = [
-    { name: '团结大街一店', amount: '150.1' },
-    { name: '曲石大龙井店', amount: '130.98' },
-    { name: '秀峰店', amount: '130.95' },
+    { name: '团结大街一店', code: 'STR001', area: '华东大区', amount: '150.1' },
+    { name: '曲石大龙井店', code: 'STR022', area: '西南大区', amount: '130.98' },
+    { name: '秀峰店', code: 'STR085', area: '华南大区', amount: '130.95' },
   ];
 
   return (
@@ -1247,19 +2065,28 @@ const IncentiveDistributionView = () => {
         <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
           <h3 className="font-bold text-gray-700 flex items-center">
             <Grid size={16} className="mr-2 text-blue-500" />
-            整体激励发放情况
+            活动激励发放情况
           </h3>
           <span className="text-xs text-gray-400">截止日期: 2026-11-17</span>
         </div>
-        <div className="p-4 grid grid-cols-4 gap-4">
+        <div className="p-4 grid grid-cols-3 gap-4">
           {overallStats.map((stat, idx) => (
-            <div key={idx} className="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+            <div 
+              key={idx} 
+              onClick={() => onNavigateToDetails?.({ startDate: '', endDate: '', rewardType: stat.type })}
+              className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 cursor-pointer hover:bg-white hover:shadow-md hover:border-blue-200 transition-all group"
+            >
               <div className="flex items-center space-x-3 mb-2">
-                <div className="p-1.5 bg-white rounded-lg shadow-sm">{stat.icon}</div>
-                <span className="text-xs text-gray-500">{stat.label}</span>
+                <div className="p-1.5 bg-white rounded-lg shadow-sm group-hover:bg-blue-50 transition-colors">{stat.icon}</div>
+                <span className="text-xs text-gray-500 group-hover:text-blue-600 font-medium transition-colors">{stat.label}</span>
               </div>
-              <div className="text-xl font-bold text-gray-800">{stat.value}</div>
-              <div className="text-[10px] text-gray-400 mt-1">{stat.date}</div>
+              <div className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">{stat.value}</div>
+              <div className="text-[10px] text-gray-400 mt-1 flex justify-between items-center">
+                <span>{stat.date}</span>
+                <span className="text-blue-500 opacity-0 group-hover:opacity-100 text-[9px] flex items-center transition-all">
+                  查看明细 <ChevronRight size={10} className="ml-0.5" />
+                </span>
+              </div>
             </div>
           ))}
         </div>
@@ -1281,25 +2108,28 @@ const IncentiveDistributionView = () => {
               <div className="text-xl font-bold text-orange-600">10.12 元</div>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">获得激励前三名</div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-2">
                 {employeeTop3.map((emp, idx) => (
-                  <div key={idx} className="bg-gray-50 p-3 rounded-lg text-center border border-gray-100">
-                    <div className="text-xs text-gray-500 mb-1">{emp.name}</div>
-                    <div className="text-sm font-bold text-gray-800">{emp.amount}</div>
+                  <div key={idx} className="bg-gray-50 p-2 rounded-lg border border-gray-100 grid grid-cols-4 gap-2 text-[10px] items-center">
+                    <div className="truncate"><span className="text-gray-400">姓名:</span> <span className="font-medium text-gray-700">{emp.name}</span></div>
+                    <div><span className="text-gray-400">编码:</span> <span>{emp.code}</span></div>
+                    <div className="truncate" title={emp.store}><span className="text-gray-400">门店:</span> <span>{emp.store}</span></div>
+                    <div className="text-right font-bold text-orange-600">{emp.amount} 元</div>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="space-y-2 pt-2">
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">激励区间分布</div>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">激励区间分布 (人均 10.12)</div>
               <div className="space-y-2">
                 {[
-                  { label: '低于 50 元', count: 1123, total: 1129 },
-                  { label: '低于 20 元', count: 994, total: 1129 },
-                  { label: '低于 10 元', count: 679, total: 1129 },
+                  { label: '上浮 30% 以上', count: 42, total: 1129 },
+                  { label: '上浮 10% - 30%', count: 156, total: 1129 },
+                  { label: '下浮 10% - 30%', count: 284, total: 1129 },
+                  { label: '下浮 30% 以下', count: 112, total: 1129 },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center space-x-3">
                     <div className="text-xs text-gray-600 w-20">{item.label}</div>
@@ -1332,25 +2162,28 @@ const IncentiveDistributionView = () => {
               <div className="text-xl font-bold text-blue-600">25.86 元</div>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">获得激励前三名</div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-2">
                 {storeTop3.map((store, idx) => (
-                  <div key={idx} className="bg-gray-50 p-3 rounded-lg text-center border border-gray-100">
-                    <div className="text-[10px] text-gray-500 mb-1 truncate px-1" title={store.name}>{store.name}</div>
-                    <div className="text-sm font-bold text-gray-800">{store.amount}</div>
+                  <div key={idx} className="bg-gray-50 p-2 rounded-lg border border-gray-100 grid grid-cols-4 gap-2 text-[10px] items-center">
+                    <div className="truncate" title={store.name}><span className="text-gray-400">名称:</span> <span className="font-medium text-gray-700">{store.name}</span></div>
+                    <div><span className="text-gray-400">编码:</span> <span>{store.code}</span></div>
+                    <div className="truncate"><span className="text-gray-400">片区:</span> <span>{store.area}</span></div>
+                    <div className="text-right font-bold text-blue-600">{store.amount} 元</div>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="space-y-2 pt-2">
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">激励区间分布</div>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">激励区间分布 (店均 25.86)</div>
               <div className="space-y-2">
                 {[
-                  { label: '低于 100 元', count: 436, total: 442 },
-                  { label: '低于 50 元', count: 393, total: 442 },
-                  { label: '低于 20 元', count: 215, total: 442 },
+                  { label: '上浮 30% 以上', count: 28, total: 442 },
+                  { label: '上浮 10% - 30%', count: 64, total: 442 },
+                  { label: '下浮 10% - 30%', count: 112, total: 442 },
+                  { label: '下浮 30% 以下', count: 45, total: 442 },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center space-x-3">
                     <div className="text-xs text-gray-600 w-20">{item.label}</div>
@@ -1425,6 +2258,9 @@ const BusinessSettingsView = () => {
     isManual?: boolean;
   }>>([]);
 
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationMessage, setValidationMessage] = useState('');
+
   const [operationRecords, setOperationRecords] = useState([
     { type: '员工黑名单', user: '666666_admin', content: '删除员工12414(压测员工门店单39223)', time: '2026-03-18 13:40:38' },
     { type: '员工黑名单', user: '666666_admin', content: '新增员工12414(压测员工门店单39223)', time: '2026-03-18 13:40:37' },
@@ -1455,6 +2291,28 @@ const BusinessSettingsView = () => {
       content,
       time: timeStr
     }, ...prev]);
+  };
+
+  const handleSaveSettings = () => {
+    const errors = [];
+
+    if (publicIncentiveEnabled && publicIncentiveTypes.includes('custom') && configuredProducts.length === 0) {
+      errors.push('公域订单激励的商品激励配置不能为空');
+    }
+    
+    if (privateIncentiveEnabled && privateIncentiveModes.includes('custom') && privateConfiguredProducts.length === 0) {
+      errors.push('私域+线下流水的商品激励配置不能为空');
+    }
+
+    if (errors.length > 0) {
+      setValidationMessage(errors.join('，') + '，请添加商品。');
+      setShowValidationModal(true);
+      return;
+    }
+
+    addOperationRecord('保存设置', '更新了业务设置配置');
+    setValidationMessage('保存成功');
+    setShowValidationModal(true);
   };
 
   const handleAddProduct = (products: Array<{ code: string; ratio: string }>) => {
@@ -1781,6 +2639,11 @@ const BusinessSettingsView = () => {
                               >
                                 手动添加
                               </button>
+                              <button 
+                                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 text-gray-600"
+                              >
+                                导出
+                              </button>
                             </div>
                           </div>
 
@@ -2058,6 +2921,11 @@ const BusinessSettingsView = () => {
                               >
                                 手动添加
                               </button>
+                              <button 
+                                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 text-gray-600"
+                              >
+                                导出
+                              </button>
                             </div>
                           </div>
 
@@ -2314,6 +3182,16 @@ const BusinessSettingsView = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+            {/* 新增提示 */}
+            <div className="p-4 mt-auto border-t border-gray-50 bg-gray-50/30">
+              <div className="text-sm font-bold text-gray-800 mb-2">注意：</div>
+              <ul className="text-xs text-gray-500 space-y-1.5 list-disc list-inside">
+                <li>在黑名单中的员工登录随心看，仅可正常查询账户余额及所有流水记录，但无法提现；</li>
+                <li>在黑名单中的员工所获得的所有收益将不再参与随心看端【看谁赚得多】排行；</li>
+                <li>在黑名单中的员工所有群聊消息【大单来了】【收益秘籍】将不会被播报；</li>
+                <li>在黑名单中的员工不能晒单；</li>
+              </ul>
             </div>
           </div>
         )}
@@ -3421,6 +4299,31 @@ const BusinessSettingsView = () => {
         </div>
       )}
 
+      {/* Validation Modal */}
+      {showValidationModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-[400px] shadow-xl">
+            <div className="flex justify-between items-center p-4 border-b border-gray-100">
+              <h3 className="font-medium text-gray-800">提示</h3>
+              <button onClick={() => setShowValidationModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 text-center text-gray-600">
+              {validationMessage}
+            </div>
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
+              <button 
+                onClick={() => setShowValidationModal(false)}
+                className="px-6 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                确定
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating Action Buttons */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
         <button className="flex items-center space-x-1 px-4 py-2 border border-blue-600 text-blue-600 rounded bg-white text-sm hover:bg-blue-50 transition-colors shadow-sm font-medium">
@@ -3429,7 +4332,10 @@ const BusinessSettingsView = () => {
         </button>
       </div>
       <div className="absolute bottom-4 right-4">
-        <button className="px-6 py-2 bg-blue-600 text-white rounded shadow-md hover:bg-blue-700 transition-colors text-sm font-medium">
+        <button 
+          onClick={handleSaveSettings}
+          className="px-6 py-2 bg-blue-600 text-white rounded shadow-md hover:bg-blue-700 transition-colors text-sm font-medium"
+        >
           保存设置
         </button>
       </div>
@@ -3437,19 +4343,929 @@ const BusinessSettingsView = () => {
   );
 };
 
-const HomeView = ({ onActivityClick }: { onActivityClick?: (id: string) => void }) => {
+const TargetManagementDimensionView = () => {
+  const [showTargetActivityModal, setShowTargetActivityModal] = useState(false);
+  const [selectedTarget, setSelectedTarget] = useState<any>(null);
+
+  const mockData = [
+    { id: 'TGT-2026-001', type: '组合目标-按数量', targetAmount: '10000', targetEmployees: 500, targetStores: 50, completedEmployees: 450, completedStores: 48, employeeRate: '90%', storeRate: '96%', targetActivityCount: 4 },
+    { id: 'TGT-2026-002', type: '单品目标-按数量', targetAmount: '5000', targetEmployees: 300, targetStores: 30, completedEmployees: 200, completedStores: 25, employeeRate: '66.7%', storeRate: '83.3%', targetActivityCount: 2 },
+    { id: 'TGT-2026-003', type: '系列目标-按数量', targetAmount: '8000', targetEmployees: 400, targetStores: 40, completedEmployees: 350, completedStores: 38, employeeRate: '87.5%', storeRate: '95%', targetActivityCount: 6 },
+    { id: 'TGT-2026-004', type: '单品目标-按金额', targetAmount: '¥500,000', targetEmployees: 200, targetStores: 20, completedEmployees: 180, completedStores: 19, employeeRate: '90%', storeRate: '95%', targetActivityCount: 3 },
+    { id: 'TGT-2026-005', type: '系列目标-按金额', targetAmount: '¥800,000', targetEmployees: 250, targetStores: 25, completedEmployees: 210, completedStores: 22, employeeRate: '84%', storeRate: '88%', targetActivityCount: 5 },
+  ];
+
+  const openTargetActivityModal = (item: any) => {
+    setSelectedTarget(item);
+    setShowTargetActivityModal(true);
+  };
+
+  const targetActivities = [
+    { name: '2026春季感冒药专项激励', type: '单品销售激励', time: '2026-03-01 至 2026-05-31', status: '进行中' },
+    { name: '维C银翘片季度达成奖励', type: '目标达成激励', time: '2026-04-01 至 2026-06-30', status: '未开始' },
+    { name: '品牌周联动促销活动', type: '关联销售激励', time: '2026-03-15 至 2026-03-22', status: '已结束' },
+    { name: '新店开业全品类大促', type: '单品销售激励', time: '2026-04-10 至 2026-04-20', status: '进行中' },
+  ];
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-4 space-y-6 bg-gray-50 min-h-full pb-20"
+    >
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-lg font-bold text-gray-800">目标管理维度</h2>
+        <button className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 flex items-center shadow-sm">
+          <Download size={14} className="mr-1.5" />
+          导出数据
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        {mockData.map((item, index) => (
+          <div key={index} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <div className="flex items-center">
+                <div className="p-1.5 bg-blue-50 rounded text-blue-500 mr-2">
+                  <BarChart3 size={16} />
+                </div>
+                <h3 className="font-bold text-gray-800">{item.type}</h3>
+              </div>
+              <div className="flex items-center space-x-6">
+                <div className="text-sm text-gray-500">
+                  目标活动数: 
+                  <button 
+                    onClick={() => openTargetActivityModal(item)}
+                    className="ml-2 font-bold text-blue-600 hover:underline hover:text-blue-700 bg-blue-50 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                  >
+                    {item.targetActivityCount}个
+                  </button>
+                </div>
+                <div className="text-sm text-gray-500">
+                  目标量: <span className="font-bold text-gray-800 text-lg ml-1">{item.targetAmount}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 员工完成情况 */}
+              <div className="border border-gray-100 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-medium text-gray-800 flex items-center">
+                    <div className="p-1.5 bg-orange-50 rounded text-orange-500 mr-2">
+                      <User size={16} />
+                    </div>
+                    员工完成情况
+                  </h4>
+                  <span className="text-xs text-gray-500">目标人数 {item.targetEmployees} 人</span>
+                </div>
+                
+                <div className="bg-orange-50 rounded-lg p-4 flex justify-between items-center mb-5">
+                  <span className="text-orange-600 font-medium">员工达成率</span>
+                  <span className="text-2xl font-bold text-orange-600">{item.employeeRate}</span>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">完成进度</span>
+                    <span className="text-gray-800 font-medium">{item.completedEmployees} <span className="text-gray-400 text-xs font-normal">/ {item.targetEmployees} 人</span></span>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-orange-500 rounded-full" style={{ width: item.employeeRate }}></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 门店完成情况 */}
+              <div className="border border-gray-100 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-medium text-gray-800 flex items-center">
+                    <div className="p-1.5 bg-blue-50 rounded text-blue-500 mr-2">
+                      <Store size={16} />
+                    </div>
+                    门店完成情况
+                  </h4>
+                  <span className="text-xs text-gray-500">目标门店数 {item.targetStores} 家</span>
+                </div>
+                
+                <div className="bg-blue-50 rounded-lg p-4 flex justify-between items-center mb-5">
+                  <span className="text-blue-600 font-medium">门店达成率</span>
+                  <span className="text-2xl font-bold text-blue-600">{item.storeRate}</span>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">完成进度</span>
+                    <span className="text-gray-800 font-medium">{item.completedStores} <span className="text-gray-400 text-xs font-normal">/ {item.targetStores} 家</span></span>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: item.storeRate }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Target Activity Detail Modal */}
+      {showTargetActivityModal && selectedTarget && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden border border-gray-100"
+          >
+            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
+              <div className="flex items-center">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center mr-4 shadow-lg shadow-blue-200">
+                  <ClipboardList size={22} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 leading-tight">目标关联活动明细</h3>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <button 
+                  onClick={() => setShowTargetActivityModal(false)}
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-50/30">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead className="bg-gray-50 text-gray-500 font-bold text-[11px] uppercase tracking-wider border-b border-gray-100">
+                    <tr>
+                      <th className="px-6 py-4 w-16 text-center">序号</th>
+                      <th className="px-6 py-4">活动名称</th>
+                      <th className="px-6 py-4">激励类型</th>
+                      <th className="px-6 py-4">活动时间</th>
+                      <th className="px-6 py-4 text-center">状态</th>
+                      <th className="px-6 py-4 text-center">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {targetActivities.slice(0, selectedTarget.targetActivityCount).map((activity, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 transition-colors group">
+                        <td className="px-6 py-4 text-center text-gray-500 font-mono italic">{idx + 1}</td>
+                        <td className="px-6 py-4 text-gray-800 font-bold">{activity.name}</td>
+                        <td className="px-6 py-4">
+                          <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-[11px] font-medium border border-blue-100">
+                            {activity.type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-gray-500 text-xs tabular-nums">
+                          {activity.time}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`px-2 py-1 rounded text-[11px] font-bold ${
+                            activity.status === '进行中' ? 'text-emerald-600 bg-emerald-50 border border-emerald-100' : 
+                            activity.status === '未开始' ? 'text-orange-600 bg-orange-50 border border-orange-100' : 
+                            'text-gray-400 bg-gray-50 border border-gray-200'
+                          }`}>
+                            {activity.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button className="text-blue-600 hover:underline font-bold text-xs">管理</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 bg-white border-t border-gray-100 flex justify-between items-center">
+              <span className="text-xs text-gray-500 font-medium">共 {selectedTarget.targetActivityCount} 个关联活动</span>
+              <button 
+                onClick={() => setShowTargetActivityModal(false)}
+                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 hover:text-gray-900 transition-all shadow-sm active:scale-95 cursor-pointer"
+              >
+                关闭界面
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+
+const RobotAdoptionView = () => {
+  const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  
+  const stats = [
+    { label: '群聊机器人', value: '12', subValue: '共计群数', extraInfo: '共计 1500 人', icon: <MessageCircle className="text-blue-500" size={20} /> },
+    { 
+      label: '私聊机器人', 
+      value: '1373', 
+      subValue: '已添加人数', 
+      icon: <User className="text-orange-500" size={20} />,
+      clickable: true,
+      extraStats: [
+        { label: '点赞次数', value: '45.2k' }
+      ]
+    },
+  ];
+
+  const privateChatRoles = [
+    { role: '老板', count: 1, likeCount: 15 },
+    { role: '运营', count: 2, likeCount: 42 },
+    { role: '区域经理', count: 4, likeCount: 128 },
+    { role: '店长', count: 123, likeCount: 4205 },
+    { role: '店员', count: 1243, likeCount: 40810 },
+  ];
+
+  const robotEmployees = [
+    { id: 1, avatar: 'https://i.pravatar.cc/150?u=1', customerId: '7881300361932437', customerName: 'BOYSO', storeName: '97测试门店1', storeCode: '24637454324', company: '97测试集团', employeeName: '江国兴', employeeCode: '3055', gender: '男', role: '店员', status: '在职', isAdded: true },
+    { id: 2, avatar: 'https://i.pravatar.cc/150?u=2', customerId: '7881299703911906', customerName: 'zlx____', storeName: '上海海典集团', storeCode: 'c_0', company: '上海海典集团', employeeName: '小周自动化员工账户41108', employeeCode: '1739165503571', gender: '女', role: '店员', status: '在职', isAdded: true },
+    { id: 3, avatar: 'https://i.pravatar.cc/150?u=3', customerId: '7881299703911906', customerName: 'zlx____', storeName: '海典智慧药房双品汇店(直营)', storeCode: '20002', company: '上海海典智慧药店', employeeName: 'zlx', employeeCode: '318401', gender: '女', role: '运营', status: '在职', isAdded: true },
+    { id: 4, avatar: 'https://i.pravatar.cc/150?u=4', customerId: '7881303047909341', customerName: '越来越菜', storeName: '海典智慧药房双品汇店(直营)', storeCode: '20002', company: '上海海典智慧药店', employeeName: 'zlx', employeeCode: '3184', gender: '男', role: '老板', status: '在职', isAdded: true },
+    { id: 5, avatar: 'https://i.pravatar.cc/150?u=5', customerId: '7881302545221407', customerName: 'noone', storeName: '熊家店', storeCode: '1025', company: '上海海典集团', employeeName: '何晓妍', employeeCode: '20014', gender: '未知', role: '店长', status: '在职', isAdded: true },
+  ];
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-4 space-y-4 bg-gray-50 min-h-full"
+    >
+      {/* Module Title */}
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-lg font-bold text-gray-800">机器人普及情况</h2>
+        <div className="text-xs text-gray-400">数据更新时间: 2026-03-18 08:31</div>
+      </div>
+
+      {/* Header Stats */}
+      <div className="grid grid-cols-2 gap-4">
+        {stats.map((stat, idx) => (
+          <div key={idx} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+            <div className="flex justify-between items-start relative z-10">
+              <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-blue-50 transition-colors">{stat.icon}</div>
+              {stat.extraStats && (
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{stat.extraStats[0].label}</span>
+                  <span className="text-sm font-bold text-orange-500">{stat.extraStats[0].value}</span>
+                </div>
+              )}
+            </div>
+            <div className="mt-3 relative z-10">
+              <div 
+                className={`text-2xl font-bold text-gray-800 ${stat.clickable ? 'cursor-pointer hover:text-blue-600 transition-colors inline-block' : ''}`}
+                onClick={() => stat.clickable && setShowEmployeeModal(true)}
+              >
+                {stat.value}
+                {stat.clickable && <ExternalLink size={14} className="inline ml-1 mb-1 opacity-0 group-hover:opacity-100 transition-opacity" />}
+              </div>
+              <div className="text-xs text-gray-400 mt-1 flex justify-between">
+                <span>{stat.label} - {stat.subValue}</span>
+                {stat.extraInfo && <span>{stat.extraInfo}</span>}
+              </div>
+            </div>
+            {stat.clickable && (
+              <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-medium">点击查看列表</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        {/* Private Chat Roles */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
+            <h3 className="font-bold text-gray-700 flex items-center">
+              <User size={16} className="mr-2 text-orange-500" />
+              私聊机器人 - 职位分布
+            </h3>
+          </div>
+          <div className="p-0 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50 text-gray-500 text-[11px] uppercase tracking-wider border-b border-gray-100">
+                <tr>
+                  <th className="px-4 py-3 font-medium">职位</th>
+                  <th className="px-4 py-3 font-medium">已添加人数</th>
+                  <th className="px-4 py-3 font-medium text-right">点赞次数</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {privateChatRoles.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-gray-700">{item.role}</td>
+                    <td className="px-4 py-3 text-gray-600 font-medium">{item.count}</td>
+                    <td className="px-4 py-3 text-orange-500 font-bold text-right">{item.likeCount.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Added Robot Employees Modal */}
+      {showEmployeeModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden"
+          >
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-gray-800">已添加机器人员工列表</h3>
+              <button 
+                onClick={() => setShowEmployeeModal(false)}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50 flex flex-col space-y-4">
+              {/* Notice */}
+              <div className="bg-orange-50 border border-orange-100 rounded-lg p-3 flex items-start text-xs text-orange-600">
+                <Info size={14} className="mr-2 mt-0.5 shrink-0" />
+                <span>注意：离职、未关联状态的员工信息将从此列表中移除</span>
+              </div>
+
+              {/* Filters */}
+              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-wrap items-end gap-4">
+                <div className="space-y-1 min-w-[200px]">
+                  <label className="text-xs text-gray-500 font-bold">所属企业</label>
+                  <select className="w-full border border-gray-200 rounded px-3 py-1.5 text-sm bg-white outline-none focus:border-blue-400">
+                    <option>请选择</option>
+                  </select>
+                </div>
+                <div className="space-y-1 min-w-[200px]">
+                  <label className="text-xs text-gray-500 font-bold">员工</label>
+                  <input type="text" placeholder="员工编号/员工姓名" className="w-full border border-gray-200 rounded px-3 py-1.5 text-sm outline-none focus:border-blue-400" />
+                </div>
+                <div className="space-y-1 min-w-[200px]">
+                  <label className="text-xs text-gray-500 font-bold">角色类型</label>
+                  <select className="w-full border border-gray-200 rounded px-3 py-1.5 text-sm bg-white outline-none focus:border-blue-400">
+                    <option>店员/店长/区域经理/运营/老板</option>
+                  </select>
+                </div>
+                <div className="flex space-x-2">
+                  <button className="bg-blue-600 text-white px-6 py-1.5 rounded text-sm font-medium hover:bg-blue-700 transition-colors">查询</button>
+                  <button className="border border-gray-200 text-gray-600 px-6 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">重置</button>
+                </div>
+                <div className="flex-1 flex justify-end space-x-2">
+                  <button className="border border-gray-200 text-gray-600 px-4 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors flex items-center">
+                    <Download size={14} className="mr-1.5" /> 导出
+                    <ChevronDown size={14} className="ml-1" />
+                  </button>
+                  <button className="bg-white border border-blue-200 text-blue-600 px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-50 transition-colors">同步数据</button>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
+                <div className="overflow-auto flex-1">
+                  <table className="w-full text-left text-sm border-collapse">
+                    <thead className="bg-gray-50 sticky top-0 z-10 text-gray-500 text-[11px] uppercase tracking-wider font-bold border-b border-gray-200">
+                      <tr>
+                        <th className="px-4 py-3 border-r border-gray-200 w-12 text-center">序号</th>
+                        <th className="px-4 py-3 border-r border-gray-200">客户头像</th>
+                        <th className="px-4 py-3 border-r border-gray-200">客户Id</th>
+                        <th className="px-4 py-3 border-r border-gray-200">客户姓名</th>
+                        <th className="px-4 py-3 border-r border-gray-200">所在门店</th>
+                        <th className="px-4 py-3 border-r border-gray-200">所属企业</th>
+                        <th className="px-4 py-3 border-r border-gray-200">员工姓名/编码</th>
+                        <th className="px-4 py-3 border-r border-gray-200">客户性别</th>
+                        <th className="px-4 py-3 border-r border-gray-200">角色类型</th>
+                        <th className="px-4 py-3 border-r border-gray-200">在职状态</th>
+                        <th className="px-4 py-3">是否添加机器人</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {robotEmployees.map((emp, index) => (
+                        <tr key={emp.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-4 border-r border-gray-100 text-gray-500 text-center">{index + 1}</td>
+                          <td className="px-4 py-4 border-r border-gray-100 text-center">
+                            <img src={emp.avatar} alt="avatar" className="w-10 h-10 rounded-lg mx-auto border border-gray-200 object-cover" referrerPolicy="no-referrer" />
+                          </td>
+                          <td className="px-4 py-4 border-r border-gray-100 font-mono text-gray-600">{emp.customerId}</td>
+                          <td className="px-4 py-4 border-r border-gray-100 font-medium text-gray-800">{emp.customerName}</td>
+                          <td className="px-4 py-4 border-r border-gray-100">
+                            <div className="text-xs text-gray-700 font-medium">{emp.storeName}</div>
+                            <div className="text-[10px] text-gray-400 mt-0.5">{emp.storeCode}</div>
+                          </td>
+                          <td className="px-4 py-4 border-r border-gray-100 text-gray-600">{emp.company}</td>
+                          <td className="px-4 py-4 border-r border-gray-100">
+                            <div className="text-xs text-gray-700 font-medium">{emp.employeeName}</div>
+                            <div className="text-[11px] text-blue-500 font-mono mt-0.5">{emp.employeeCode}</div>
+                          </td>
+                          <td className="px-4 py-4 border-r border-gray-100 text-gray-600">{emp.gender}</td>
+                          <td className="px-4 py-4 border-r border-gray-100 text-gray-600 italic font-medium">{emp.role}</td>
+                          <td className="px-4 py-4 border-r border-gray-100">
+                            <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-[10px]">{emp.status}</span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center text-green-500 font-bold text-xs">
+                              <div className="w-1 h-1 bg-green-500 rounded-full mr-1.5 animate-pulse"></div>
+                              ● 已关联
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination Placeholder */}
+                <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
+                   <div className="flex items-center space-x-1 text-xs text-gray-500">
+                      <span>共 1373 条</span>
+                      <div className="w-px h-3 bg-gray-300 mx-2"></div>
+                      <button className="px-2 py-1 rounded border border-gray-200 bg-white">&lt;</button>
+                      <button className="px-2 py-1 rounded border border-blue-500 bg-blue-50 text-blue-600">1</button>
+                      <button className="px-2 py-1 rounded border border-gray-200 bg-white">2</button>
+                      <button className="px-2 py-1 rounded border border-gray-200 bg-white">...</button>
+                      <button className="px-2 py-1 rounded border border-gray-200 bg-white">&gt;</button>
+                   </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end bg-white">
+              <button 
+                onClick={() => setShowEmployeeModal(false)}
+                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors"
+              >
+                关闭
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+const EmployeeSocialInteractionView = ({ onNavigate }: { onNavigate?: (subItem: string) => void }) => {
+  const [showLikesModal, setShowLikesModal] = useState(false);
+  const [showSharesModal, setShowSharesModal] = useState(false);
+
+  const LIKE_DETAILS = [
+    { name: '王晓明', code: 'EMP001', store: '长沙旗舰店', time: '2026-03-23 10:30:15' },
+    { name: '李华', code: 'EMP005', store: '岳麓山店', time: '2026-03-23 11:45:22' },
+    { name: '张强', code: 'EMP008', store: '五一坊店', time: '2026-03-23 14:20:00' },
+    { name: '赵敏', code: 'EMP012', store: '洋湖大道店', time: '2026-03-23 16:10:05' },
+    { name: '钱多多', code: 'EMP015', store: '天心阁店', time: '2026-03-23 17:30:40' },
+  ];
+
+  const SHARE_DETAILS = [
+    { name: '刘洋', code: 'EMP002', store: '河西步步高店', time: '2026-03-23 09:15:30' },
+    { name: '陈洁', code: 'EMP010', store: '梅溪湖店', time: '2026-03-23 13:50:45' },
+    { name: '孙伟', code: 'EMP018', store: '烈士公园店', time: '2026-03-23 15:25:12' },
+  ];
+
+  const handleDownload = (data: any[], filename: string) => {
+    // Mock download behavior
+    console.log(`Downloading ${filename}...`, data);
+    alert(`数据已准备好下载：${filename}`);
+  };
+
+  const DetailModal = ({ 
+    isOpen, 
+    onClose, 
+    title, 
+    data, 
+    timeLabel 
+  }: { 
+    isOpen: boolean, 
+    onClose: () => void, 
+    title: string, 
+    data: any[], 
+    timeLabel: string 
+  }) => (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]"
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+              <h3 className="text-lg font-bold text-gray-800">{title}明细</h3>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-sm text-gray-500">共 {data.length} 条记录</span>
+                <button 
+                  onClick={() => handleDownload(data, `${title}列表.csv`)}
+                  className="flex items-center space-x-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+                >
+                  <Download size={16} />
+                  <span>下载数据</span>
+                </button>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">员工姓名</th>
+                      <th className="px-4 py-3 font-semibold">员工编码</th>
+                      <th className="px-4 py-3 font-semibold">所属门店</th>
+                      <th className="px-4 py-3 font-semibold">{timeLabel}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 text-gray-700">
+                    {data.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
+                        <td className="px-4 py-3">{item.name}</td>
+                        <td className="px-4 py-3 font-mono text-xs">{item.code}</td>
+                        <td className="px-4 py-3">{item.store}</td>
+                        <td className="px-4 py-3 text-xs text-gray-500">{item.time}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-end">
+              <button 
+                onClick={onClose}
+                className="px-6 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                关闭
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+
+  const stats = [
+    { 
+      label: '晒单数', 
+      value: '1,245', 
+      icon: <FileText className="text-blue-500" size={20} />,
+      onClick: () => onNavigate?.('晒单管理')
+    },
+    { 
+      label: '点赞数', 
+      value: '8,432', 
+      icon: <ThumbsUp className="text-red-500" size={20} />,
+      onClick: () => setShowLikesModal(true)
+    },
+    { 
+      label: '转发数', 
+      value: '3,102', 
+      icon: <Share2 className="text-green-500" size={20} />,
+      onClick: () => setShowSharesModal(true)
+    },
+    { 
+      label: '评论数', 
+      value: '5,621', 
+      icon: <MessageSquare className="text-purple-500" size={20} />,
+      onClick: () => onNavigate?.('评论管理')
+    },
+    { 
+      label: '激励金额', 
+      value: '￥12,500.00', 
+      icon: <Package className="text-orange-500" size={20} />,
+      onClick: () => onNavigate?.('奖励明细')
+    },
+  ];
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-4 space-y-4 bg-gray-50 min-h-full"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-lg font-bold text-gray-800">员工社交互动</h2>
+        <div className="text-xs text-gray-400">数据更新时间: 2026-03-26 23:24</div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {stats.map((stat, idx) => (
+          <div 
+            key={idx} 
+            onClick={stat.onClick}
+            className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200 cursor-pointer transition-all flex flex-col items-center justify-center text-center group"
+          >
+            <div className="p-3 bg-gray-50 rounded-full mb-3 group-hover:bg-blue-50 transition-colors">
+              {stat.icon}
+            </div>
+            <div className="text-2xl font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors">{stat.value}</div>
+            <div className="text-sm text-gray-500">{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <DetailModal 
+        isOpen={showLikesModal} 
+        onClose={() => setShowLikesModal(false)} 
+        title="点赞" 
+        data={LIKE_DETAILS} 
+        timeLabel="点赞时间" 
+      />
+
+      <DetailModal 
+        isOpen={showSharesModal} 
+        onClose={() => setShowSharesModal(false)} 
+        title="转发" 
+        data={SHARE_DETAILS} 
+        timeLabel="转发时间" 
+      />
+    </motion.div>
+  );
+};
+
+const EmployeeUsageView = () => {
+  const [showUnloggedModal, setShowUnloggedModal] = useState(false);
+
+  const unloggedEmployees = [
+    { name: '张三', id: 'EMP001', org: '海典大药房-上海分店', role: '店员' },
+    { name: '李四', id: 'EMP002', org: '海典大药房-北京分店', role: '店长' },
+    { name: '王五', id: 'EMP003', org: '海典大药房-广州分店', role: '运营' },
+    { name: '赵六', id: 'EMP004', org: '海典大药房-深圳分店', role: '店员' },
+    { name: '钱七', id: 'EMP005', org: '海典大药房-杭州分店', role: '店员' },
+    { name: '孙八', id: 'EMP006', org: '海典大药房-南京分店', role: '店员' },
+    { name: '周九', id: 'EMP007', org: '海典大药房-武汉分店', role: '店员' },
+    { name: '吴十', id: 'EMP008', org: '海典大药房-成都分店', role: '店员' },
+  ];
+
+  const handleExport = () => {
+    console.log('Exporting unlogged employees data...');
+    // In a real app, this would trigger a download
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-4 space-y-4 bg-gray-50 min-h-full"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-lg font-bold text-gray-800">员工使用情况</h2>
+        <div className="text-xs text-gray-400">数据更新时间: 2026-03-26 23:28</div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* 登录情况 */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center">
+            <div className="p-1.5 bg-blue-50 rounded text-blue-500 mr-2">
+              <LogIn size={16} />
+            </div>
+            <h3 className="font-bold text-gray-800">登录情况</h3>
+          </div>
+          <div className="p-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-3 rounded-lg text-center">
+                <div className="text-sm text-gray-500 mb-1">登录人数</div>
+                <div className="text-xl font-bold text-gray-800">856 <span className="text-xs font-normal text-gray-500">人</span></div>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg text-center">
+                <div className="text-sm text-gray-500 mb-1">连锁员工总数</div>
+                <div className="text-xl font-bold text-gray-800">1,129 <span className="text-xs font-normal text-gray-500">人</span></div>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 rounded-lg p-4 flex justify-between items-center">
+              <span className="text-blue-600 font-medium">登录率</span>
+              <span className="text-2xl font-bold text-blue-600">75.8%</span>
+            </div>
+
+            <button 
+              onClick={() => setShowUnloggedModal(true)}
+              className="w-full py-2 text-sm text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center"
+            >
+              <User size={14} className="mr-1.5" />
+              查看未登录人员名单
+            </button>
+          </div>
+        </div>
+
+        {/* 提现情况 */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center">
+            <div className="p-1.5 bg-orange-50 rounded text-orange-500 mr-2">
+              <Wallet size={16} />
+            </div>
+            <h3 className="font-bold text-gray-800">提现情况</h3>
+          </div>
+          <div className="p-4 space-y-4">
+            <div className="bg-gray-50 p-3 rounded-lg text-center">
+              <div className="text-sm text-gray-500 mb-1">未提现金额 (总)</div>
+              <div className="text-2xl font-bold text-gray-800">￥45,230.50</div>
+            </div>
+            
+            <div className="bg-gray-50 p-3 rounded-lg text-center">
+              <div className="text-sm text-gray-500 mb-1">一次也没提现人数</div>
+              <div className="text-xl font-bold text-gray-800">342 <span className="text-xs font-normal text-gray-500">人</span></div>
+            </div>
+            
+            <div className="bg-orange-50 rounded-lg p-4 flex justify-between items-center">
+              <span className="text-orange-600 font-medium">提现率</span>
+              <span className="text-2xl font-bold text-orange-600">69.7%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 认证情况 */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center">
+            <div className="p-1.5 bg-green-50 rounded text-green-500 mr-2">
+              <ShieldCheck size={16} />
+            </div>
+            <h3 className="font-bold text-gray-800">认证情况</h3>
+          </div>
+          <div className="p-4 space-y-4">
+            <div className="bg-gray-50 p-3 rounded-lg text-center">
+              <div className="text-sm text-gray-500 mb-1">完成随心看认证人数</div>
+              <div className="text-2xl font-bold text-gray-800">1,050 <span className="text-xs font-normal text-gray-500">人</span></div>
+            </div>
+            
+            <div className="bg-green-50 rounded-lg p-4 flex justify-between items-center mt-auto">
+              <span className="text-green-600 font-medium">认证率</span>
+              <span className="text-2xl font-bold text-green-600">93.0%</span>
+            </div>
+            
+            <div className="space-y-2 pt-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">认证进度</span>
+                <span className="text-gray-800 font-medium">1,050 <span className="text-gray-400 text-xs font-normal">/ 1,129 人</span></span>
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-green-500 rounded-full" style={{ width: '93%' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Unlogged Employees Modal */}
+      {showUnloggedModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[85vh] flex flex-col"
+          >
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                <User size={20} className="mr-2 text-blue-500" />
+                未登录人员名单
+              </h3>
+              <button onClick={() => setShowUnloggedModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 flex-1 overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <div className="text-sm text-gray-500">
+                  共计 <span className="font-bold text-blue-600">273</span> 名员工未登录
+                </div>
+                <button 
+                  onClick={handleExport}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 flex items-center shadow-sm transition-all active:scale-95"
+                >
+                  <Download size={16} className="mr-2" />
+                  一键导出数据
+                </button>
+              </div>
+              
+              <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4">员工信息</th>
+                      <th className="px-6 py-4">员工编号</th>
+                      <th className="px-6 py-4">所属机构</th>
+                      <th className="px-6 py-4">角色</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {unloggedEmployees.map((emp, idx) => (
+                      <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold mr-3">
+                              {emp.name.charAt(0)}
+                            </div>
+                            <span className="text-gray-800 font-medium">{emp.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-gray-600 font-mono">{emp.id}</td>
+                        <td className="px-6 py-4 text-gray-600">{emp.org}</td>
+                        <td className="px-6 py-4">
+                          <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
+                            {emp.role}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end bg-gray-50/50 rounded-b-xl">
+              <button 
+                onClick={() => setShowUnloggedModal(false)}
+                className="px-6 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+              >
+                关闭
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+const HomeView = ({ 
+  onActivityClick,
+  onNavigate,
+  onNavigateToRewardDetails
+}: { 
+  onActivityClick?: (id: string) => void,
+  onNavigate?: (subItem: string) => void,
+  onNavigateToRewardDetails?: (filters: { startDate: string, endDate: string, rewardType: string }) => void
+}) => {
   const [activeTab, setActiveTab] = useState('品种维度');
+  const [timeField, setTimeField] = useState('订单创建时间');
+  const [startDate, setStartDate] = useState('2026-04-01');
+  const [endDate, setEndDate] = useState('2026-04-21');
+
+  const handleReset = () => {
+    setStartDate('2026-04-01');
+    setEndDate('2026-04-21');
+    setTimeField('订单创建时间');
+  };
 
   return (
     <div className="flex flex-col h-full">
-      <div className="bg-white px-4 border-b border-gray-200 flex items-center">
+      <div className="bg-white px-4 border-b border-gray-200 flex items-center overflow-x-auto no-scrollbar">
         <TabItem label="品种维度" active={activeTab === '品种维度'} onClick={() => setActiveTab('品种维度')} />
-        <TabItem label="活动维度" active={activeTab === '活动维度'} onClick={() => setActiveTab('活动维度')} />
-        <TabItem label="激励发放情况" active={activeTab === '激励发放情况'} onClick={() => setActiveTab('激励发放情况')} />
+        <TabItem label="活动政策维度" active={activeTab === '活动政策维度'} onClick={() => setActiveTab('活动政策维度')} />
+        <TabItem label="活动激励发放情况" active={activeTab === '活动激励发放情况'} onClick={() => setActiveTab('活动激励发放情况')} />
+        <TabItem label="目标管理维度" active={activeTab === '目标管理维度'} onClick={() => setActiveTab('目标管理维度')} />
+        <TabItem label="机器人普及情况" active={activeTab === '机器人普及情况'} onClick={() => setActiveTab('机器人普及情况')} />
+        <TabItem label="员工社交互动" active={activeTab === '员工社交互动'} onClick={() => setActiveTab('员工社交互动')} />
+        <TabItem label="员工使用情况" active={activeTab === '员工使用情况'} onClick={() => setActiveTab('员工使用情况')} />
       </div>
+
+      <div className="bg-gray-50 px-4 pt-4">
+        <GenericTableFilter 
+          initialTimeField={timeField}
+          initialStartDate={startDate}
+          initialEndDate={endDate}
+          onQuery={(data) => {
+            setTimeField(data.timeField);
+            setStartDate(data.startDate);
+            setEndDate(data.endDate);
+          }}
+          onReset={handleReset}
+        />
+      </div>
+
       <div className="flex-1 overflow-y-auto no-scrollbar">
         {activeTab === '品种维度' ? <VarietyDimensionView onActivityClick={onActivityClick} /> : 
-         activeTab === '活动维度' ? <ActivityDimensionView /> : 
+         activeTab === '活动政策维度' ? <ActivityDimensionView onActivityClick={onActivityClick} /> : 
+         activeTab === '活动激励发放情况' ? (
+           <IncentiveDistributionView 
+             onNavigateToDetails={(filters) => 
+               onNavigateToRewardDetails?.({ 
+                 ...filters, 
+                 startDate, 
+                 endDate 
+               })
+             } 
+           />
+         ) :
+         activeTab === '目标管理维度' ? <TargetManagementDimensionView /> :
+         activeTab === '机器人普及情况' ? <RobotAdoptionView /> :
+         activeTab === '员工社交互动' ? (
+           <EmployeeSocialInteractionView 
+             onNavigate={onNavigate} 
+           />
+         ) :
+         activeTab === '员工使用情况' ? <EmployeeUsageView /> :
          <IncentiveDistributionView />}
       </div>
     </div>
@@ -3795,6 +5611,320 @@ function CreateActivityView({ onBack }: { onBack: () => void }) {
   );
 }
 
+const GoldenSingleProductView = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCode, setSearchCode] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [tempTag, setTempTag] = useState('');
+  const [showImportModal, setShowImportModal] = useState(false);
+
+  const [products, setProducts] = useState([
+    {
+      id: '1',
+      image: 'https://picsum.photos/seed/medicine1/100/100',
+      name: '阿莫西林胶囊',
+      spec: '0.25g*24粒',
+      code: 'YP001',
+      barcode: '6901234567890',
+      time: '2026-03-18 10:00:00',
+      tag: '热销'
+    },
+    {
+      id: '2',
+      image: 'https://picsum.photos/seed/medicine2/100/100',
+      name: '感冒灵颗粒',
+      spec: '10g*9袋',
+      code: 'YP002',
+      barcode: '6901234567891',
+      time: '2026-03-18 11:00:00',
+      tag: '常备'
+    },
+    {
+      id: '3',
+      image: 'https://picsum.photos/seed/medicine3/100/100',
+      name: '布洛芬缓释胶囊',
+      spec: '0.3g*20粒',
+      code: 'YP003',
+      barcode: '6901234567892',
+      time: '2026-03-18 12:00:00',
+      tag: '止痛'
+    },
+    {
+      id: '4',
+      image: 'https://picsum.photos/seed/medicine4/100/100',
+      name: '维C银翘片',
+      spec: '12片*2板',
+      code: 'YP004',
+      barcode: '6901234567893',
+      time: '2026-03-18 13:00:00',
+      tag: '维C'
+    },
+    {
+      id: '5',
+      image: 'https://picsum.photos/seed/medicine5/100/100',
+      name: '板蓝根颗粒',
+      spec: '10g*20袋',
+      code: 'YP005',
+      barcode: '6901234567894',
+      time: '2026-03-18 14:00:00',
+      tag: '清热'
+    },
+    {
+      id: '6',
+      image: 'https://picsum.photos/seed/medicine6/100/100',
+      name: '藿香正气水',
+      spec: '10ml*10支',
+      code: 'YP006',
+      barcode: '6901234567895',
+      time: '2026-03-18 15:00:00',
+      tag: '解暑'
+    }
+  ]);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => 
+      (p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.code.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (searchCode === '' || p.code.toLowerCase().includes(searchCode.toLowerCase()))
+    );
+  }, [products, searchQuery, searchCode]);
+
+  const handleEditTag = (id: string, currentTag: string) => {
+    setEditingId(id);
+    setTempTag(currentTag || '');
+  };
+
+  const handleSaveTag = (id: string) => {
+    if (tempTag.length > 4) {
+      alert('标签最多可输入四个汉字');
+      return;
+    }
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, tag: tempTag } : p));
+    setEditingId(null);
+  };
+
+  const handleAddTagClick = () => {
+    setShowImportModal(true);
+  };
+
+  return (
+    <div className="p-4 flex flex-col h-full overflow-hidden">
+      <AnimatePresence>
+        {showImportModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-lg shadow-2xl w-[500px] overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-gray-800">导入数据</h3>
+                <button 
+                  onClick={() => setShowImportModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-gray-800 mb-2">导入操作指南</h4>
+                  <p className="text-sm text-gray-600 flex items-center">
+                    点击 <button className="text-blue-600 hover:underline mx-1 font-medium">下载模板</button> 按照表格模板填好对应的信息
+                  </p>
+                </div>
+
+                <div className="border-2 border-dashed border-gray-200 rounded-xl p-12 flex flex-col items-center justify-center space-y-4 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group">
+                  <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-600 font-medium">点击上传文件或拖拽文件到这里</p>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+                <button 
+                  onClick={() => setShowImportModal(false)}
+                  className="px-6 py-2 border border-blue-600 text-blue-600 rounded-md text-sm font-medium hover:bg-blue-50 transition-colors"
+                >
+                  取消
+                </button>
+                <button 
+                  onClick={() => setShowImportModal(false)}
+                  className="px-6 py-2 bg-blue-300 text-white rounded-md text-sm font-medium cursor-not-allowed"
+                >
+                  确定
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="space-y-1">
+            <label className="text-xs text-gray-500">商品名称/编码</label>
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="请输入商品名称或编码" 
+              className="w-64 border border-gray-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-gray-500">厂家编码</label>
+            <input 
+              type="text" 
+              value={searchCode}
+              onChange={(e) => setSearchCode(e.target.value)}
+              placeholder="请输入厂家编码" 
+              className="w-48 border border-gray-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+            />
+          </div>
+          <div className="flex space-x-2">
+            <button className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium hover:bg-blue-700 transition-colors">查询</button>
+            <button 
+              onClick={() => {setSearchQuery(''); setSearchCode('');}}
+              className="border border-gray-200 text-gray-600 px-4 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors flex items-center"
+            >
+              <RotateCcw size={14} className="mr-1" /> 重置
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 flex-1 flex flex-col overflow-hidden">
+        <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+          <div className="flex space-x-2">
+            <button 
+              onClick={handleAddTagClick}
+              className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium flex items-center"
+            >
+              <Plus size={16} className="mr-1" /> 新增商品标签
+            </button>
+            <button className="border border-gray-200 text-gray-600 px-4 py-1.5 rounded text-sm font-medium flex items-center hover:bg-gray-50">
+              <Download size={16} className="mr-1" /> 导入商品
+            </button>
+          </div>
+          <div className="flex items-center space-x-4">
+            <button className="text-gray-400 hover:text-blue-600 transition-colors">
+              <RotateCcw size={18} />
+            </button>
+            <button className="text-gray-400 hover:text-blue-600 transition-colors">
+              <MoreHorizontal size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          <table className="w-full text-left text-sm border-collapse">
+            <thead className="bg-gray-50 text-gray-500 font-medium sticky top-0 z-10">
+              <tr>
+                <th className="px-4 py-3 border-b border-gray-100">商品信息</th>
+                <th className="px-4 py-3 border-b border-gray-100">规格</th>
+                <th className="px-4 py-3 border-b border-gray-100">商品展示标签</th>
+                <th className="px-4 py-3 border-b border-gray-100">商品编码/条码</th>
+                <th className="px-4 py-3 border-b border-gray-100">操作时间</th>
+                <th className="px-4 py-3 border-b border-gray-100 text-center">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts.map((product) => (
+                <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-4 border-b border-gray-50">
+                    <div className="flex items-center space-x-3">
+                      <img src={product.image} alt={product.name} className="w-10 h-10 rounded border border-gray-100 object-cover" referrerPolicy="no-referrer" />
+                      <span className="font-medium text-gray-700">{product.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 border-b border-gray-50 text-gray-600">{product.spec}</td>
+                  <td className="px-4 py-4 border-b border-gray-50">
+                    {editingId === product.id ? (
+                      <div className="flex items-center space-x-2">
+                        <input 
+                          type="text" 
+                          value={tempTag}
+                          onChange={(e) => setTempTag(e.target.value)}
+                          maxLength={4}
+                          className="w-24 border border-blue-400 rounded px-2 py-1 text-xs focus:outline-none"
+                          autoFocus
+                        />
+                        <button 
+                          onClick={() => handleSaveTag(product.id)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <Check size={14} />
+                        </button>
+                        <button 
+                          onClick={() => setEditingId(null)}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2 group/tag">
+                        <span className={`px-2 py-0.5 rounded text-[10px] ${product.tag ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'text-gray-300 italic'}`}>
+                          {product.tag || '无标签'}
+                        </span>
+                        <button 
+                          onClick={() => handleEditTag(product.id, product.tag || '')}
+                          className="opacity-0 group-hover/tag:opacity-100 text-blue-500 hover:text-blue-700 transition-opacity"
+                        >
+                          <Edit3 size={12} />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 border-b border-gray-50 text-gray-600">
+                    <div>{product.code}</div>
+                    <div className="text-xs text-gray-400">{product.barcode}</div>
+                  </td>
+                  <td className="px-4 py-4 border-b border-gray-50 text-gray-500 text-xs">{product.time}</td>
+                  <td className="px-4 py-4 border-b border-gray-50">
+                    <div className="flex items-center justify-center space-x-3">
+                      <button className="text-blue-600 hover:underline text-xs">排序</button>
+                      <button className="text-blue-600 hover:underline text-xs">置顶</button>
+                      <button className="text-gray-400 hover:text-red-500 transition-colors">
+                        <MoreHorizontal size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+          <span>共 {filteredProducts.length} 条</span>
+          <div className="flex items-center space-x-2">
+            <button className="p-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50" disabled><ChevronLeft size={14} /></button>
+            <button className="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center">1</button>
+            <button className="p-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50" disabled><ChevronRight size={14} /></button>
+            <select className="border border-gray-200 rounded px-2 py-1 bg-white">
+              <option>10条/页</option>
+              <option>20条/页</option>
+            </select>
+            <div className="flex items-center space-x-1">
+              <span>跳转至</span>
+              <input type="text" className="w-8 border border-gray-200 rounded px-1 py-1 text-center" defaultValue="1" />
+              <span>页</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeMainTab, setActiveMainTab] = useState('慢病活动');
@@ -3809,6 +5939,11 @@ export default function App() {
   const [searchType, setSearchType] = useState<IncentiveType | ''>('');
   const [participationFilter, setParticipationFilter] = useState<ParticipationStatus>('待参与');
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+  const [rewardDetailFilters, setRewardDetailFilters] = useState<{ startDate: string, endDate: string, rewardType: string }>({
+    startDate: '',
+    endDate: '',
+    rewardType: ''
+  });
 
   React.useEffect(() => {
     setSelectedActivityId(null);
@@ -3996,10 +6131,20 @@ export default function App() {
 
         <div className="flex-1 overflow-y-auto no-scrollbar">
           {activeSubItem === '首页' ? (
-            <HomeView onActivityClick={(id) => {
-              setActiveSubItem('我的活动');
-              setSelectedActivityId(id);
-            }} />
+            <HomeView 
+              onActivityClick={(id) => {
+                setActiveSubItem('我的活动');
+                setSelectedActivityId(id);
+              }} 
+              onNavigate={(subItem) => {
+                setActiveSubItem(subItem);
+                setExpandedSubmenu('店员圈');
+              }}
+              onNavigateToRewardDetails={(filters) => {
+                setRewardDetailFilters(filters);
+                setActiveSubItem('奖励发放明细');
+              }}
+            />
           ) : activeSubItem === '我的活动' ? (
             selectedActivityId ? (
               <ActivityDetailView id={selectedActivityId} onBack={() => setSelectedActivityId(null)} />
@@ -4008,6 +6153,313 @@ export default function App() {
             )
           ) : activeSubItem === '创建活动' ? (
             <CreateActivityView onBack={() => setActiveSubItem('我的活动')} />
+          ) : activeSubItem === '奖励发放明细' ? (
+            <div className="p-6 bg-white min-h-full">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-gray-800">奖励发放明细</h2>
+                {rewardDetailFilters.startDate && (
+                  <div className="flex items-center bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+                    <History size={14} className="text-blue-600 mr-2" />
+                    <span className="text-xs text-blue-700">
+                      已带入时间范围: {rewardDetailFilters.startDate} 至 {rewardDetailFilters.endDate}
+                      {rewardDetailFilters.rewardType && ` | 奖励内容: ${rewardDetailFilters.rewardType}`}
+                    </span>
+                    <button 
+                      onClick={() => setRewardDetailFilters({ startDate: '', endDate: '', rewardType: '' })}
+                      className="ml-3 text-blue-400 hover:text-blue-600 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {/* Search Filters */}
+              <div className="grid grid-cols-5 gap-4 mb-6 text-sm">
+                <div className="flex items-center space-x-2">
+                  <select className="border border-gray-300 rounded px-2 py-1.5 w-32"><option>订单创建时</option></select>
+                  <input 
+                    type="text" 
+                    readOnly
+                    placeholder="2026-03-01 - 2026-03-23" 
+                    value={rewardDetailFilters.startDate ? `${rewardDetailFilters.startDate} 至 ${rewardDetailFilters.endDate}` : ""}
+                    className="border border-gray-300 rounded px-2 py-1.5 flex-1 bg-gray-50 focus:outline-none" 
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">ERP订单号</label>
+                  <input type="text" placeholder="ERP订单号" className="border border-gray-300 rounded px-2 py-1.5 flex-1" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">商品编码</label>
+                  <input type="text" placeholder="输入商品编码搜索" className="border border-gray-300 rounded px-2 py-1.5 flex-1" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">商品名称</label>
+                  <input type="text" placeholder="输入商品名称搜索" className="border border-gray-300 rounded px-2 py-1.5 flex-1" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">活动</label>
+                  <input type="text" placeholder="输入活动名称搜索" className="border border-gray-300 rounded px-2 py-1.5 flex-1" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <select className="border border-gray-300 rounded px-2 py-1.5 w-32"><option>奖励员工</option></select>
+                  <input type="text" placeholder="搜索员工编码或名称" className="border border-gray-300 rounded px-2 py-1.5 flex-1" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <select className="border border-gray-300 rounded px-2 py-1.5 w-32"><option>厂家名称</option></select>
+                  <input type="text" placeholder="请输入" className="border border-gray-300 rounded px-2 py-1.5 flex-1" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">下门店</label>
+                  <input type="text" placeholder="输入机构/门店名称" className="border border-gray-300 rounded px-2 py-1.5 flex-1" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">门店类型</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>全部</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">入账状态</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>全部</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">补推申请单号</label>
+                  <input type="text" placeholder="激励补推申请单号" className="border border-gray-300 rounded px-2 py-1.5 flex-1" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">奖励内容</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1 bg-white focus:outline-none">
+                    <option>{rewardDetailFilters.rewardType || '请选择'}</option>
+                    <option>及时豆</option>
+                    <option>延时豆</option>
+                  </select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">订单来源</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>请选择</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">激励计算</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>请选择</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">激励发放</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>请选择</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">基数类型</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>请选择</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">微商城订单号</label>
+                  <input type="text" placeholder="微商城订单号" className="border border-gray-300 rounded px-2 py-1.5 flex-1" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">所属门店</label>
+                  <input type="text" placeholder="输入机构/门店名称" className="border border-gray-300 rounded px-2 py-1.5 flex-1" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">销售区域</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>请选择省/市</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">门店所属企业</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>请选择</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">出资所属企业</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>请选择</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">所属片区</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>请选择所属片区</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">激励类型</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>请选择</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">扣费模式</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1"><option>请选择</option></select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-gray-600 w-20 text-right">付款方式</label>
+                  <select className="border border-gray-300 rounded px-2 py-1.5 flex-1">
+                    <option>全部</option>
+                    <option>1/A现金</option>
+                    <option>5/E金孚龙卡</option>
+                    <option>1111/pengwzh付款方式</option>
+                    <option>1/货到付款</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2 mb-6">
+                <button className="text-blue-600 text-sm flex items-center"><RotateCcw size={14} className="mr-1" /> 折叠条件</button>
+                <button className="bg-blue-600 text-white px-6 py-1.5 rounded text-sm">查询</button>
+                <button className="border border-gray-300 rounded px-6 py-1.5 text-sm">导出</button>
+              </div>
+
+              {/* Stats Table */}
+              <table className="w-full border-collapse border border-gray-200 text-sm mb-6">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="p-3 border border-gray-200">统计指标</th>
+                    <th className="p-3 border border-gray-200">激励金额(元)</th>
+                    <th className="p-3 border border-gray-200">退款金额(元)</th>
+                    <th className="p-3 border border-gray-200">实发金额(元)</th>
+                    <th className="p-3 border border-gray-200">订单数(个)</th>
+                    <th className="p-3 border border-gray-200">退款订单数(个)</th>
+                    <th className="p-3 border border-gray-200">实发订单数(个)</th>
+                    <th className="p-3 border border-gray-200">奖励销售数量(个)</th>
+                    <th className="p-3 border border-gray-200">标价金额(元)</th>
+                    <th className="p-3 border border-gray-200">实付金额(元)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="p-3 border border-gray-200 font-bold text-yellow-600">及时豆</td>
+                    <td className="p-3 border border-gray-200">89.81</td>
+                    <td className="p-3 border border-gray-200">-50</td>
+                    <td className="p-3 border border-gray-200">39.81</td>
+                    <td className="p-3 border border-gray-200">107</td>
+                    <td className="p-3 border border-gray-200">9</td>
+                    <td className="p-3 border border-gray-200">98</td>
+                    <td className="p-3 border border-gray-200">5</td>
+                    <td className="p-3 border border-gray-200">105.4</td>
+                    <td className="p-3 border border-gray-200">120.2</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 border border-gray-200 font-bold text-green-600">延时豆</td>
+                    <td className="p-3 border border-gray-200">0</td>
+                    <td className="p-3 border border-gray-200">0</td>
+                    <td className="p-3 border border-gray-200">0</td>
+                    <td className="p-3 border border-gray-200">0</td>
+                    <td className="p-3 border border-gray-200">0</td>
+                    <td className="p-3 border border-gray-200">0</td>
+                    <td className="p-3 border border-gray-200">0</td>
+                    <td className="p-3 border border-gray-200">0</td>
+                    <td className="p-3 border border-gray-200">0</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Details Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-200 text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">奖励生成时间</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">ERP订单号</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">订单时间</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">账户中心创建时间</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">奖励商品</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">数量</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">奖励销售数量</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">奖励金额</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">奖励状态</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">营业员</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">奖励员工</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">下门店</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">门店类型</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">活动名称</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">奖励类型</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">付款方式</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">付款方式激励比例</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">活动厂家</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">奖励内容</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">商品类型</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">订单来源</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">分享人</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">微商城订单号</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">关联原单(仅退货)</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">补推申请单号</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">账户中心入账时间</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">账户中心出账时间</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">入账状态</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">所属门店</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">平台服务费</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">平台服务费率</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">连锁服务费</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">出资所属企业</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">激励发放</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">基数类型</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">奖励发放备注</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">扣费模式</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">激励计算</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">标价金额</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">实付金额</th>
+                      <th className="p-3 border border-gray-200 whitespace-nowrap">奖励销售金额</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      {/* ... existing cells ... */}
+                      <td className="p-3 border border-gray-200">2026-03-23 13:16:35</td>
+                      <td className="p-3 border border-gray-200">10137</td>
+                      <td className="p-3 border border-gray-200">2026-03-23 13:16:35</td>
+                      <td className="p-3 border border-gray-200">2026-03-23 13:16:35</td>
+                      <td className="p-3 border border-gray-200">规格: -<br/>商品编码: -<br/>商品批号: -</td>
+                      <td className="p-3 border border-gray-200">0</td>
+                      <td className="p-3 border border-gray-200">0</td>
+                      <td className="p-3 border border-gray-200">0.01</td>
+                      <td className="p-3 border border-gray-200">已发放</td>
+                      <td className="p-3 border border-gray-200">周日明<br/>3551</td>
+                      <td className="p-3 border border-gray-200">周日明<br/>3551</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">厂家模式-无连锁抽佣</td>
+                      <td className="p-3 border border-gray-200">手工发放连锁抽佣激励</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">小婷供应商<br/>SP4867</td>
+                      <td className="p-3 border border-gray-200">及时豆</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">2026-03-23 13:19:08</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">已结算</td>
+                      <td className="p-3 border border-gray-200">海典智慧药房双品汇店(直营)<br/>20002</td>
+                      <td className="p-3 border border-gray-200">0</td>
+                      <td className="p-3 border border-gray-200">0</td>
+                      <td className="p-3 border border-gray-200">0</td>
+                      <td className="p-3 border border-gray-200">0</td>
+                      <td className="p-3 border border-gray-200">-</td>
+                      <td className="p-3 border border-gray-200">上海海典智慧药店<br/>c_20</td>
+                      <td className="p-3 border border-gray-200">按固定金额</td>
+                      <td className="p-3 border border-gray-200">按实付金额</td>
+                      <td className="p-3 border border-gray-200">已发放</td>
+                      <td className="p-3 border border-gray-200">激励扣厂家 服务费扣厂家</td>
+                      <td className="p-3 border border-gray-200">按商品数量</td>
+                      <td className="p-3 border border-gray-200">0</td>
+                      <td className="p-3 border border-gray-200">0</td>
+                      <td className="p-3 border border-gray-200">0</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-end space-x-2 mt-4 text-sm">
+                <span className="text-gray-600">共 1 条</span>
+                <select className="border border-gray-300 rounded px-2 py-1">
+                  <option>10条/页</option>
+                  <option>20条/页</option>
+                  <option>50条/页</option>
+                </select>
+                <button className="border border-gray-300 rounded px-3 py-1 disabled:opacity-50" disabled>&lt;</button>
+                <button className="bg-blue-600 text-white rounded px-3 py-1">1</button>
+                <button className="border border-gray-300 rounded px-3 py-1 disabled:opacity-50" disabled>&gt;</button>
+                <span className="text-gray-600">跳至</span>
+                <input type="text" className="border border-gray-300 rounded w-12 px-2 py-1 text-center" defaultValue="1" />
+                <span className="text-gray-600">页</span>
+              </div>
+            </div>
+          ) : activeSubItem === '带金单品' ? (
+            <GoldenSingleProductView />
           ) : activeSubItem === '业务设置' ? (
             <BusinessSettingsView />
           ) : activeSubItem === '活动广场' ? (
