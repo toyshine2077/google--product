@@ -41,6 +41,7 @@ import {
   Store,
   FileText,
   Edit3,
+  Settings,
   User,
   Users,
   MessageCircle,
@@ -907,7 +908,6 @@ const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: stri
               {topSelling.map((item, idx) => (
                 <tr key={idx} className="hover:bg-gray-50 transition-colors text-xs">
                   <td className="px-4 py-3 font-medium text-gray-700 truncate max-w-[120px]" title={item.name}>{item.name}</td>
-                  <td className="px-4 py-3 text-gray-400 font-mono text-[10px]">{item.code}</td>
                   <td className="px-4 py-3 text-center">
                     {item.tag3A === '3A' ? (
                       <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-100 rounded">
@@ -917,6 +917,7 @@ const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: stri
                       <span className="text-gray-400">-</span>
                     )}
                   </td>
+                  <td className="px-4 py-3 text-gray-400 font-mono text-[10px]">{item.code}</td>
                   <td className="px-4 py-3 text-blue-400 bg-blue-50/50 px-1 rounded inline-block my-2 mx-4">{item.batchNumber}</td>
                   <td className="px-4 py-3 text-gray-500 truncate max-w-[150px]" title={item.manufacturer}>{item.manufacturer}</td>
                   <td className="px-4 py-3 text-gray-600">{item.qty}</td>
@@ -966,7 +967,6 @@ const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: stri
               {nonSelling.map((item, idx) => (
                 <tr key={idx} className="hover:bg-gray-50 transition-colors text-xs">
                   <td className="px-4 py-3 font-medium text-gray-700 truncate max-w-[120px]" title={item.name}>{item.name}</td>
-                  <td className="px-4 py-3 text-gray-400 font-mono text-[10px]">{item.code}</td>
                   <td className="px-4 py-3 text-center">
                     {item.tag3A === '3A' ? (
                       <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-100 rounded">
@@ -976,6 +976,7 @@ const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: stri
                       <span className="text-gray-400">-</span>
                     )}
                   </td>
+                  <td className="px-4 py-3 text-gray-400 font-mono text-[10px]">{item.code}</td>
                   <td className="px-4 py-3">
                     <span className="text-[10px] text-blue-400 bg-blue-50 px-1 rounded inline-block my-1">
                       {item.batchNumber}
@@ -1071,10 +1072,7 @@ const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: stri
                 <table className="w-full text-left text-sm border-collapse">
                   <thead className="bg-gray-50 text-gray-500 text-[11px] uppercase tracking-wider sticky top-0 z-10">
                     <tr className="border-b border-gray-100">
-                      <th className="px-6 py-4 font-medium">商品名称</th>
-                      <th className="px-6 py-4 font-medium">商品编码</th>
-                      <th className="px-6 py-4 font-medium">商品批号</th>
-                      <th className="px-6 py-4 font-medium text-center">3A标识</th>
+                      <th className="px-6 py-4 font-medium min-w-[240px]">商品信息</th>
                       <th className="px-6 py-4 font-medium text-right">销售数量</th>
                       <th className="px-6 py-4 font-medium text-right">销售金额</th>
                       <th className="px-6 py-4 font-medium text-right">毛利额</th>
@@ -1086,19 +1084,21 @@ const VarietyDimensionView = ({ onActivityClick }: { onActivityClick?: (id: stri
                   <tbody className="divide-y divide-gray-50 bg-white">
                     {threeAProducts.map((item, idx) => (
                       <tr key={idx} className="hover:bg-blue-50/30 transition-colors group">
-                        <td className="px-6 py-4 font-semibold text-gray-800">
-                          {item.name}
-                        </td>
-                        <td className="px-6 py-4 text-gray-500 font-mono text-[10px]">{item.code}</td>
                         <td className="px-6 py-4">
-                          <span className="text-[10px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-                            {item.batchNumber}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className="inline-flex items-center justify-center px-2 py-1 text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-100 rounded">
-                            {item.tag}
-                          </span>
+                          <div className="flex flex-col space-y-1">
+                            <div className="font-bold text-gray-800 text-sm flex items-center">
+                              {item.name}
+                              {item.tag === '3A' && (
+                                <span className="ml-2 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold text-purple-600 bg-purple-50 border border-purple-100 rounded">
+                                  3A
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2 text-[10px]">
+                              <span className="text-gray-400">编码: {item.code}</span>
+                              <span className="text-blue-400 bg-blue-50 px-1.5 rounded">{item.batchNumber}</span>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-right font-medium text-gray-700">{item.qty}</td>
                         <td className="px-6 py-4 text-right font-semibold text-gray-900 text-sm">¥{parseFloat(item.sales).toLocaleString()}</td>
@@ -2065,7 +2065,7 @@ const IncentiveDistributionView = ({
         <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
           <h3 className="font-bold text-gray-700 flex items-center">
             <Grid size={16} className="mr-2 text-blue-500" />
-            活动激励发放情况
+            活动激励发放
           </h3>
           <span className="text-xs text-gray-400">截止日期: 2026-11-17</span>
         </div>
@@ -2207,6 +2207,797 @@ const IncentiveDistributionView = ({
 
 // --- Home View Component (Tabs) ---
 
+const OrderSharingManagementView = () => {
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  
+  const mockData = [
+    {
+      id: '26050800020024220',
+      employee: {
+        name: '随**',
+        code: '1503',
+        store: '海典智慧药房双品汇店(直营)'
+      },
+      enterprise: '上海海典智慧药店',
+      enterpriseCode: 'c_20',
+      district: '西南大区',
+      districtCode: '04816',
+      sharingTime: '2026-05-20 00:05:34',
+      score: 21,
+      tag: '-',
+      incentiveStatus: '有激励',
+      rewardContent: '延时豆',
+      rewardValue: 1.01,
+      manufacturer: '小婷供应商',
+      manufacturerCode: 'SP4867',
+      tipper: 'z**',
+      issueTime: '2026-05-20 00:08:50',
+      hideReason: '-',
+    },
+    {
+      id: '26042300020010890',
+      employee: {
+        name: '随**',
+        code: '1503',
+        store: '海典智慧药房双品汇店(直营)'
+      },
+      enterprise: '上海海典智慧药店',
+      enterpriseCode: 'c_20',
+      district: '西南大区',
+      districtCode: '04816',
+      sharingTime: '2026-05-19 23:58:23',
+      score: 100,
+      tag: '优',
+      incentiveStatus: '无激励',
+      rewardContent: '-',
+      rewardValue: 0,
+      manufacturer: '--',
+      manufacturerCode: '',
+      tipper: '-',
+      issueTime: '-',
+      hideReason: '测试数据',
+    },
+    {
+      id: '26042300020008277',
+      employee: {
+        name: '随**',
+        code: '1503',
+        store: '海典智慧药房双品汇店(直营)'
+      },
+      enterprise: '上海海典智慧药店',
+      enterpriseCode: 'c_20',
+      district: '西南大区',
+      districtCode: '04816',
+      sharingTime: '2026-05-19 23:54:00',
+      score: 97,
+      tag: '优',
+      incentiveStatus: '有激励',
+      rewards: [
+        { type: '及时豆', value: 6.86 },
+        { type: '延时豆', value: 6.67 }
+      ],
+      totalReward: 13.53,
+      manufacturer: '小婷供应商',
+      manufacturerCode: 'SP4867',
+      tipper: 'z**',
+      issueTime: '2026-05-20 00:12:22',
+      hideReason: '测试数据',
+    },
+    {
+      id: '25121000020007884',
+      employee: {
+        name: 'z**',
+        code: '318401',
+        store: '海典智慧药房双品汇店(直营)'
+      },
+      enterprise: '上海海典智慧药店',
+      enterpriseCode: 'c_20',
+      district: '西南大区',
+      districtCode: '04816',
+      sharingTime: '2025-12-10 00:49:07',
+      score: 13,
+      tag: '-',
+      incentiveStatus: '无激励',
+      rewardContent: '-',
+      rewardValue: 0,
+      manufacturer: '--',
+      manufacturerCode: '',
+      tipper: '--',
+      issueTime: '-',
+      hideReason: '-',
+    }
+  ];
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedItems(mockData.map(item => item.id));
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
+  const handleSelectItem = (id: string) => {
+    if (selectedItems.includes(id)) {
+      setSelectedItems(selectedItems.filter(item => item !== id));
+    } else {
+      setSelectedItems([...selectedItems, id]);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50 overflow-hidden">
+      {/* Filters Area */}
+      <div className="p-4 bg-white border-b border-gray-200 shadow-sm">
+        <div className="grid grid-cols-5 gap-y-4 gap-x-6">
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">所属企业</label>
+            <select className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 bg-white focus:ring-1 focus:ring-blue-400 outline-none">
+              <option>请选择</option>
+            </select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">所属片区</label>
+            <div className="relative flex-1">
+              <input type="text" placeholder="输入片区名称" className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs pr-10 focus:ring-1 focus:ring-blue-400 outline-none" />
+              <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">员工</label>
+            <div className="relative flex-1">
+              <input type="text" placeholder="搜索员工编码或名称" className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs pr-10 focus:ring-1 focus:ring-blue-400 outline-none" />
+              <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">所属机构</label>
+            <input type="text" placeholder="输入机构/门店名称" className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 focus:ring-1 focus:ring-blue-400 outline-none" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">展示状态</label>
+            <select className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 bg-white focus:ring-1 focus:ring-blue-400 outline-none">
+              <option>请选择</option>
+            </select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">晒单标签</label>
+            <select className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 bg-white focus:ring-1 focus:ring-blue-400 outline-none">
+              <option>请选择</option>
+            </select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">激励状态</label>
+            <select className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 bg-white focus:ring-1 focus:ring-blue-400 outline-none">
+              <option>请选择</option>
+            </select>
+          </div>
+          <div className="flex items-center space-x-2 col-span-1">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">激励厂家</label>
+            <div className="flex space-x-1 flex-1">
+              <select className="border border-gray-200 rounded px-2 py-1.5 text-xs w-24 bg-white focus:ring-1 focus:ring-blue-400 outline-none">
+                <option>厂家名称</option>
+              </select>
+              <input type="text" placeholder="请输入" className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 focus:ring-1 focus:ring-blue-400 outline-none" />
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">激励发放时间</label>
+            <div className="flex items-center space-x-1 flex-1">
+              <div className="relative flex-1">
+                <input type="text" placeholder="开始日期" className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+              </div>
+              <span className="text-gray-400 text-xs text-center">至</span>
+              <div className="relative flex-1">
+                <input type="text" placeholder="结束日期" className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs pr-10 focus:ring-1 focus:ring-blue-400 outline-none" />
+                <Calendar size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold" />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">奖励内容</label>
+            <select className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 bg-white focus:ring-1 focus:ring-blue-400 outline-none">
+              <option>请选择</option>
+            </select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">订单编号</label>
+            <input type="text" placeholder="请输入" className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 focus:ring-1 focus:ring-blue-400 outline-none" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="flex space-x-1 flex-1 ml-[72px]">
+              <select className="border border-gray-200 rounded px-2 py-1.5 text-xs w-24 bg-white focus:ring-1 focus:ring-blue-400 outline-none">
+                <option>商品名称</option>
+              </select>
+              <input type="text" placeholder="请输入" className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 focus:ring-1 focus:ring-blue-400 outline-none" />
+            </div>
+          </div>
+          <div className="flex items-center space-x-3 ml-12">
+            <button className="bg-blue-600 text-white px-6 py-1.5 rounded text-xs hover:bg-blue-700 transition-colors">查询</button>
+            <button className="bg-white border border-gray-300 text-gray-600 px-6 py-1.5 rounded text-xs hover:bg-gray-50 transition-colors">重置</button>
+            <div className="relative">
+              <button className="flex items-center space-x-1 border border-blue-200 text-blue-600 px-3 py-1.5 rounded text-xs bg-blue-50 hover:bg-blue-100 transition-all">
+                <span>导出</span>
+                <ChevronDown size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 p-4 overflow-hidden flex flex-col">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col flex-1 overflow-hidden">
+          {/* Header Actions */}
+          <div className="p-3 border-b border-gray-100 flex justify-end">
+            <button className="flex items-center space-x-1 px-3 py-1.5 border border-blue-200 text-blue-600 rounded text-xs bg-blue-50 hover:bg-blue-100 transition-colors">
+              <span>批量操作</span>
+              <ChevronDown size={14} />
+            </button>
+          </div>
+
+          {/* Table */}
+          <div className="flex-1 overflow-auto no-scrollbar">
+            <table className="w-full text-left text-[12px] border-collapse sticky top-0 bg-white">
+              <thead className="bg-[#f8fafc] text-gray-500 font-medium z-10 sticky top-0 shadow-sm border-b border-gray-100">
+                <tr>
+                  <th className="px-3 py-3 w-10">
+                    <input type="checkbox" onChange={handleSelectAll} checked={selectedItems.length === mockData.length && mockData.length > 0} className="w-4 h-4 rounded border-gray-300" />
+                  </th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">订单编号</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">员工信息</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">所属企业</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">所属片区</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">晒单时间</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">晒单分值</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">晒单标签</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">激励状态</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">奖励内容</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap text-center">激励总金额</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">激励厂家</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">打赏人</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">激励发放时间</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">隐藏原因</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap text-center sticky right-0 bg-[#f8fafc]">操作</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {mockData.map((item) => (
+                  <tr key={item.id} className={`hover:bg-blue-50/30 transition-colors ${selectedItems.includes(item.id) ? 'bg-blue-50/50' : ''}`}>
+                    <td className="px-3 py-4">
+                      <input type="checkbox" checked={selectedItems.includes(item.id)} onChange={() => handleSelectItem(item.id)} className="w-4 h-4 rounded border-gray-300" />
+                    </td>
+                    <td className="px-3 py-4 font-mono text-gray-500 whitespace-nowrap group">
+                      <span className="hover:text-blue-500 cursor-pointer">{item.id}</span>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden shrink-0">
+                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${item.employee.code}`} alt="avatar" />
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="flex items-center space-x-1">
+                            <span className="font-bold text-gray-700 text-[13px]">{item.employee.name}</span>
+                            <Eye size={12} className="text-gray-300 cursor-pointer hover:text-blue-400" />
+                          </div>
+                          <span className="text-[10px] text-gray-400">员工编码：{item.employee.code}</span>
+                          <span className="text-[10px] text-gray-400">所属机构：{item.employee.store}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-gray-600">
+                      <div>{item.enterprise}</div>
+                      <div className="text-[10px] text-gray-400">{item.enterpriseCode}</div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-gray-600">
+                      <div>{item.district}</div>
+                      <div className="text-[10px] text-gray-400">{item.districtCode}</div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-gray-500 leading-tight">
+                      {item.sharingTime.split(' ')[0]}<br/>{item.sharingTime.split(' ')[1]}
+                    </td>
+                    <td className="px-3 py-4 text-center font-bold text-gray-700">{item.score}</td>
+                    <td className="px-3 py-4">
+                      {item.tag !== '-' ? (
+                        <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded text-[10px]">{item.tag}</span>
+                      ) : (
+                        <span className="text-gray-300">-</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-4">
+                      <span className={`${item.incentiveStatus === '有激励' ? 'text-green-600' : 'text-gray-400'}`}>
+                        {item.incentiveStatus}
+                      </span>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap">
+                      {item.rewards ? (
+                        <div className="flex flex-col space-y-1">
+                          {item.rewards.map((r, idx) => (
+                            <div key={idx} className="flex items-center space-x-1">
+                              <div className={`w-2 h-2 rounded-full ${r.type === '及时豆' ? 'bg-yellow-400' : 'bg-green-400'}`}></div>
+                              <span className="text-gray-600">{r.type}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : item.rewardContent !== '-' ? (
+                        <div className="flex items-center space-x-1">
+                          <div className={`w-2 h-2 rounded-full ${item.rewardContent === '及时豆' ? 'bg-yellow-400' : 'bg-green-400'}`}></div>
+                          <span className="text-gray-600">{item.rewardContent}</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-300">-</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap">
+                      {item.rewards ? (
+                        <div className="text-[10px] text-gray-500">
+                          <div className="font-bold text-gray-700 flex items-center justify-between">
+                            激励总金额: <span>{item.totalReward}</span>
+                          </div>
+                          {item.rewards.map((r, idx) => (
+                            <div key={idx} className="flex justify-between">
+                              {r.type}: <span>{r.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : item.rewardValue > 0 ? (
+                        <div className="flex flex-col items-center">
+                          <div className="text-gray-500">{item.rewardContent}: {item.rewardValue}</div>
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-300">-</div>
+                      )}
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-gray-600">
+                      <div>{item.manufacturer}</div>
+                      <div className="text-[10px] text-gray-400">{item.manufacturerCode}</div>
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-gray-600">
+                      {item.tipper !== '-' ? (
+                        <div className="flex items-center space-x-1">
+                          <span>{item.tipper}</span>
+                          <Eye size={12} className="text-gray-300 cursor-pointer" />
+                        </div>
+                      ) : (
+                         <span className="text-gray-300">-</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap text-gray-500 leading-tight">
+                      {item.issueTime !== '-' ? (
+                        <>
+                          {item.issueTime.split(' ')[0]}<br/>
+                          {item.issueTime.split(' ')[1]}
+                        </>
+                      ) : (
+                        <span className="text-gray-300">-</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-4 text-gray-400">{item.hideReason}</td>
+                    <td className="px-3 py-4 whitespace-nowrap sticky right-0 bg-white shadow-[-4px_0_10px_rgba(0,0,0,0.02)]">
+                      <div className="flex items-center justify-center space-x-3">
+                        <button className="text-blue-600 hover:underline">查看</button>
+                        <button className="text-blue-600 hover:underline">{item.hideReason !== '-' ? '展示' : '隐藏'}</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="p-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 bg-white">
+            <span className="text-gray-400">共 {mockData.length} 条</span>
+            <div className="flex items-center space-x-2">
+              <select className="border border-gray-200 rounded px-2 py-1 bg-white cursor-pointer outline-none">
+                <option>10条/页</option>
+                <option>20条/页</option>
+                <option>50条/页</option>
+              </select>
+              <div className="flex items-center space-x-1">
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+                  <ChevronLeft size={14} />
+                </button>
+                <button className="w-6 h-6 bg-blue-600 text-white rounded font-medium">1</button>
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span>跳至</span>
+                <input type="text" className="w-8 border border-gray-200 rounded px-1 py-1 text-center font-bold" defaultValue="1" />
+                <span>页</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CommentManagementView = () => {
+  const mockData = [
+    {
+      id: '25061600020271735',
+      sharingTime: '2025-07-02 00:28:35',
+      commentTime: '2026-05-19 23:37:15',
+      employee: {
+        name: 'z**',
+        code: 'SP4867_3184'
+      },
+      enterprise: '上海海典智慧药店',
+      district: '西南大区',
+      districtCode: '04816',
+      content: '评论了等会儿删除',
+    }
+  ];
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50 overflow-hidden">
+      {/* Filters Area */}
+      <div className="p-4 bg-white border-b border-gray-200 shadow-sm">
+        <div className="flex flex-wrap items-center gap-y-4 gap-x-6">
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">所属企业</label>
+            <select className="border border-gray-200 rounded px-2 py-1.5 text-xs w-48 bg-white focus:ring-1 focus:ring-blue-400 outline-none">
+              <option>请选择</option>
+            </select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">所属片区</label>
+            <div className="relative w-48">
+              <input type="text" placeholder="输入片区名称" className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs pr-10 focus:ring-1 focus:ring-blue-400 outline-none" />
+              <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">订单编号</label>
+            <input type="text" placeholder="请输入" className="w-48 border border-gray-200 rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center border border-gray-200 rounded overflow-hidden">
+              <select className="border-r border-gray-200 px-2 py-1.5 text-xs bg-gray-50 outline-none">
+                <option>员工编码</option>
+              </select>
+              <input type="text" placeholder="请输入" className="px-2 py-1.5 text-xs w-40 focus:ring-1 focus:ring-blue-400 outline-none" />
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-3 ml-auto">
+            <button className="bg-blue-600 text-white px-6 py-1.5 rounded text-xs hover:bg-blue-700 transition-colors">查询</button>
+            <button className="bg-white border border-gray-300 text-gray-600 px-6 py-1.5 rounded text-xs hover:bg-gray-50 transition-colors">重置</button>
+            <div className="relative">
+              <button className="flex items-center space-x-1 border border-blue-200 text-blue-600 px-3 py-1.5 rounded text-xs bg-blue-50 hover:bg-blue-100 transition-all">
+                <span>导出</span>
+                <ChevronDown size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 p-4 overflow-hidden flex flex-col">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col flex-1 overflow-hidden">
+          {/* Table */}
+          <div className="flex-1 overflow-auto no-scrollbar">
+            <table className="w-full text-left text-[12px] border-collapse sticky top-0 bg-white">
+              <thead className="bg-[#f8fafc] text-gray-500 font-medium z-10 sticky top-0 shadow-sm border-b border-gray-100">
+                <tr>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">订单编号</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">晒单时间</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">评论时间</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">员工信息</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">所属企业</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">所属片区</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">评论内容</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {Array(10).fill(mockData[0]).map((item, idx) => (
+                  <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="px-4 py-4 font-mono text-gray-500 whitespace-nowrap">{item.id}</td>
+                    <td className="px-4 py-4 text-gray-500 whitespace-nowrap group">
+                       {item.sharingTime}
+                    </td>
+                    <td className="px-4 py-4 text-gray-500 whitespace-nowrap">
+                       {item.commentTime}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="flex items-center space-x-1">
+                        <span className="font-bold text-gray-700">{item.employee.name}</span>
+                        <Eye size={12} className="text-gray-300 cursor-pointer hover:text-blue-400" />
+                      </div>
+                      <div className="text-[10px] text-gray-400">{item.employee.code}</div>
+                    </td>
+                    <td className="px-4 py-4 text-gray-600">
+                      {item.enterprise}
+                    </td>
+                    <td className="px-4 py-4 text-gray-600">
+                      <div>{item.district}</div>
+                      <div className="text-[10px] text-gray-400">{item.districtCode}</div>
+                    </td>
+                    <td className="px-4 py-4 text-gray-600 max-w-xs truncate">
+                      {item.content}
+                    </td>
+                    <td className="px-4 py-4 text-center text-gray-300">-</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="p-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 bg-white">
+            <span className="text-gray-400">共 20 条</span>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+                  <ChevronLeft size={14} />
+                </button>
+                <button className="w-6 h-6 bg-blue-600 text-white rounded font-medium">1</button>
+                <button className="w-6 h-6 border border-gray-200 text-gray-600 rounded hover:bg-gray-50">2</button>
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50">
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+              <select className="border border-gray-200 rounded px-2 py-1 bg-white cursor-pointer outline-none ml-2">
+                <option>10条/页</option>
+                <option>20条/页</option>
+              </select>
+              <div className="flex items-center space-x-1">
+                <span>跳至</span>
+                <input type="text" className="w-8 border border-gray-200 rounded px-1 py-1 text-center font-bold" defaultValue="1" />
+                <span>页</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ClerkCircleRewardDetailView = () => {
+  const mockData = [
+    {
+      id: '1865601455670518529',
+      industrialName: 'zlx服务商测试',
+      industrialCode: '550237',
+      tipper: 'z**',
+      rewardAmount: '6.66',
+      issueTime: '2026-05-19 15:36:47',
+      clerk: {
+        name: '张**',
+        id: '12501',
+        org: '海典智慧药房双品汇店'
+      },
+      enterprise: '海典预发智慧药店22',
+      district: '片区五级01',
+      districtCode: '00097',
+      orderId: '260519002330002',
+      productName: '二十五味驴血丸',
+      productCode: '8013370'
+    },
+    {
+      id: '1865601235471654657',
+      industrialName: 'zlx服务商测试',
+      industrialCode: '550237',
+      tipper: 'z**',
+      rewardAmount: '8.88',
+      issueTime: '2026-05-19 15:33:11',
+      clerk: {
+        name: '张**',
+        id: '12501',
+        org: '海典智慧药房双品汇店'
+      },
+      enterprise: '海典预发智慧药店22',
+      district: '片区五级01',
+      districtCode: '00097',
+      orderId: '260519002330001',
+      productName: '麦子自建单品0112A',
+      productCode: '7001682'
+    }
+  ];
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50 overflow-hidden">
+      {/* Filters Area */}
+      <div className="p-4 bg-white border-b border-gray-200 shadow-sm">
+        <h2 className="text-sm font-bold text-gray-700 mb-4">奖励明细</h2>
+        <div className="grid grid-cols-4 lg:grid-cols-6 gap-y-4 gap-x-6">
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">所属企业</label>
+            <select className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 bg-white focus:ring-1 focus:ring-blue-400 outline-none">
+              <option>请选择</option>
+            </select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">所属片区</label>
+            <div className="relative flex-1">
+              <input type="text" placeholder="输入片区名称" className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs pr-10 focus:ring-1 focus:ring-blue-400 outline-none" />
+              <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center border border-gray-200 rounded overflow-hidden flex-1">
+              <select className="border-r border-gray-200 px-2 py-1.5 text-xs bg-gray-50 outline-none">
+                <option>工业编码</option>
+              </select>
+              <input type="text" placeholder="请输入" className="px-2 py-1.5 text-xs flex-1 focus:ring-1 focus:ring-blue-400 outline-none" />
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">晒单时间</label>
+            <div className="flex items-center space-x-1 flex-1">
+              <input type="text" placeholder="开始日期" className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+              <span className="text-gray-400 text-xs">至</span>
+              <div className="relative flex-1">
+                <input type="text" placeholder="结束日期" className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs pr-10 focus:ring-1 focus:ring-blue-400 outline-none" />
+                <Calendar size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">打赏时间</label>
+            <div className="flex items-center space-x-1 flex-1">
+              <input type="text" placeholder="开始日期" className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-blue-400 outline-none" />
+              <span className="text-gray-400 text-xs">至</span>
+              <div className="relative flex-1">
+                <input type="text" placeholder="结束日期" className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs pr-10 focus:ring-1 focus:ring-blue-400 outline-none" />
+                <Calendar size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">员工</label>
+            <input type="text" placeholder="搜索员工编码或名称" className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 focus:ring-1 focus:ring-blue-400 outline-none" />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">所属机构</label>
+            <input type="text" placeholder="输入机构/门店名称" className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 focus:ring-1 focus:ring-blue-400 outline-none" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-[12px] text-gray-500 w-16 text-right shrink-0">订单编号</label>
+            <input type="text" placeholder="请输入" className="border border-gray-200 rounded px-2 py-1.5 text-xs flex-1 focus:ring-1 focus:ring-blue-400 outline-none" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center border border-gray-200 rounded overflow-hidden flex-1">
+              <select className="border-r border-gray-200 px-2 py-1.5 text-xs bg-gray-50 outline-none">
+                <option>商品名称</option>
+              </select>
+              <input type="text" placeholder="请输入" className="px-2 py-1.5 text-xs flex-1 focus:ring-1 focus:ring-blue-400 outline-none" />
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-3 col-span-1 lg:col-span-3">
+            <button className="bg-blue-600 text-white px-6 py-1.5 rounded text-xs hover:bg-blue-700 transition-colors">查询</button>
+            <button className="bg-white border border-gray-300 text-gray-600 px-6 py-1.5 rounded text-xs hover:bg-gray-50 transition-colors">重置</button>
+            <div className="relative">
+              <button className="flex items-center space-x-1 border border-blue-200 text-blue-600 px-3 py-1.5 rounded text-xs bg-blue-50 hover:bg-blue-100 transition-all">
+                <span>导出</span>
+                <ChevronDown size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-4 text-[12px] font-bold text-gray-800">
+          累计打赏金额: 65.9元
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 p-4 overflow-hidden flex flex-col">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col flex-1 overflow-hidden">
+          {/* Table */}
+          <div className="flex-1 overflow-auto no-scrollbar">
+            <table className="w-full text-left text-[12px] border-collapse sticky top-0 bg-white">
+              <thead className="bg-[#f8fafc] text-gray-500 font-medium z-10 sticky top-0 shadow-sm border-b border-gray-100">
+                <tr>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">打赏编号</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">工业名称</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">打赏人</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap text-center">打赏金额</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">激励发放时间</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">晒单员工</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">所属企业</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">所属片区</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">订单编号</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">商品名称/编码</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap text-center">晒单内容</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50 text-gray-600">
+                {Array(10).fill(mockData[0]).concat(mockData[1]).map((item, idx) => (
+                  <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="px-4 py-4 font-mono text-gray-500 whitespace-nowrap">{item.id}</td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div>{item.industrialName}</div>
+                      <div className="text-[10px] text-gray-400">{item.industrialCode}</div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="flex items-center space-x-1">
+                        <span>{item.tipper}</span>
+                        <Eye size={12} className="text-gray-300 cursor-pointer hover:text-blue-400" />
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-center font-bold text-gray-700">{item.rewardAmount}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-gray-500">
+                       {item.issueTime}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0 overflow-hidden">
+                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${item.clerk.id}`} alt="avatar" />
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="flex items-center space-x-1">
+                            <span className="font-bold text-gray-700">{item.clerk.name}</span>
+                            <Eye size={12} className="text-gray-300 cursor-pointer hover:text-blue-400" />
+                          </div>
+                          <span className="text-[10px] text-gray-400">员工编码: {item.clerk.id}</span>
+                          <span className="text-[10px] text-gray-400 text-ellipsis max-w-[120px] overflow-hidden whitespace-nowrap">所属机构: {item.clerk.org}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {item.enterprise}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div>{item.district}</div>
+                      <div className="text-[10px] text-gray-400">{item.districtCode}</div>
+                    </td>
+                    <td className="px-4 py-4 font-mono text-gray-500 whitespace-nowrap">{item.orderId}</td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="max-w-[150px] truncate" title={item.productName}>{item.productName}</div>
+                      <div className="text-[10px] text-gray-400">{item.productCode}</div>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <button className="text-blue-600 hover:underline">查看</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="p-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 bg-white">
+            <span className="text-gray-400">共 27 条</span>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+                  <ChevronLeft size={14} />
+                </button>
+                <button className="w-6 h-6 bg-blue-600 text-white rounded font-medium">1</button>
+                <button className="w-6 h-6 border border-gray-200 text-gray-600 rounded hover:bg-gray-50">2</button>
+                <button className="w-6 h-6 border border-gray-200 text-gray-600 rounded hover:bg-gray-50">3</button>
+                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50">
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+              <select className="border border-gray-200 rounded px-2 py-1 bg-white cursor-pointer outline-none ml-2">
+                <option>10条/页</option>
+                <option>20条/页</option>
+              </select>
+              <div className="flex items-center space-x-1">
+                <span>跳至</span>
+                <input type="text" className="w-8 border border-gray-200 rounded px-1 py-1 text-center font-bold" defaultValue="1" />
+                <span>页</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const BusinessSettingsView = () => {
   const [activeTab, setActiveTab] = useState('订单配置');
   const [publicIncentiveEnabled, setPublicIncentiveEnabled] = useState(false);
@@ -2215,6 +3006,7 @@ const BusinessSettingsView = () => {
   const [publicCustomPaymentMethods, setPublicCustomPaymentMethods] = useState<string[]>([]);
   const [publicCustomActivePaymentMethod, setPublicCustomActivePaymentMethod] = useState<string | null>(null);
   const [publicPaymentModalType, setPublicPaymentModalType] = useState<'none' | 'custom' | null>(null);
+  const [publicUniversalRatios, setPublicUniversalRatios] = useState<Record<string, string>>({});
   
   // Private Domain + Offline Retail Turnover States
   const [privateIncentiveEnabled, setPrivateIncentiveEnabled] = useState(false);
@@ -2224,6 +3016,7 @@ const BusinessSettingsView = () => {
   const [privateCustomPaymentMethods, setPrivateCustomPaymentMethods] = useState<string[]>([]);
   const [privateCustomActivePaymentMethod, setPrivateCustomActivePaymentMethod] = useState<string | null>(null);
   const [privatePaymentModalType, setPrivatePaymentModalType] = useState<'none' | 'custom' | null>(null);
+  const [privateUniversalRatios, setPrivateUniversalRatios] = useState<Record<string, string>>({});
   const [showPrivatePaymentModal, setShowPrivatePaymentModal] = useState(false);
   const [showPrivateMemberLevelModal, setShowPrivateMemberLevelModal] = useState(false);
   const [showPrivateProductModal, setShowPrivateProductModal] = useState(false);
@@ -2614,6 +3407,41 @@ const BusinessSettingsView = () => {
 
                       {publicCustomActivePaymentMethod && (
                         <div className="space-y-4 pt-4 border-t border-gray-50">
+                          {/* NEW: Universal Ratio Configuration */}
+                          <div className="bg-blue-50/30 border border-blue-100 rounded-lg p-4 flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Settings size={16} className="text-blue-600" />
+                              <span className="text-sm font-medium text-gray-700">按支付方式配置所有商品配置统一激励比例 ({publicCustomActivePaymentMethod})</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-gray-500">统一比例：</span>
+                              <div className="flex items-center border border-gray-300 rounded bg-white px-2 py-1 w-24 focus-within:border-blue-500 transition-colors">
+                                <input 
+                                  type="text" 
+                                  placeholder="如 0.05" 
+                                  className="w-full text-sm outline-none" 
+                                  value={publicUniversalRatios[publicCustomActivePaymentMethod] || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setPublicUniversalRatios(prev => ({ ...prev, [publicCustomActivePaymentMethod]: val }));
+                                  }}
+                                />
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  const ratio = publicUniversalRatios[publicCustomActivePaymentMethod];
+                                  if (ratio) {
+                                    addOperationRecord('公域订单激励', `配置支付方式 ${publicCustomActivePaymentMethod} 统一激励比例：${ratio}`);
+                                    alert(`已设置 ${publicCustomActivePaymentMethod} 的统一奖励比例为 ${ratio}`);
+                                  }
+                                }}
+                                className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                              >
+                                保存
+                              </button>
+                            </div>
+                          </div>
+
                           <div className="flex items-center justify-between">
                             <h4 className="text-sm font-bold text-gray-700">商品激励配置 ({publicCustomActivePaymentMethod})</h4>
                             <div className="flex items-center space-x-3">
@@ -2896,6 +3724,41 @@ const BusinessSettingsView = () => {
 
                       {privateCustomActivePaymentMethod && (
                         <div className="space-y-4 pt-4 border-t border-gray-50">
+                          {/* NEW: Universal Ratio Configuration */}
+                          <div className="bg-blue-50/30 border border-blue-100 rounded-lg p-4 flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Settings size={16} className="text-blue-600" />
+                              <span className="text-sm font-medium text-gray-700">按支付方式配置所有商品配置统一激励比例 ({privateCustomActivePaymentMethod})</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-gray-500">统一比例：</span>
+                              <div className="flex items-center border border-gray-300 rounded bg-white px-2 py-1 w-24 focus-within:border-blue-500 transition-colors">
+                                <input 
+                                  type="text" 
+                                  placeholder="如 0.05" 
+                                  className="w-full text-sm outline-none" 
+                                  value={privateUniversalRatios[privateCustomActivePaymentMethod] || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setPrivateUniversalRatios(prev => ({ ...prev, [privateCustomActivePaymentMethod]: val }));
+                                  }}
+                                />
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  const ratio = privateUniversalRatios[privateCustomActivePaymentMethod];
+                                  if (ratio) {
+                                    addOperationRecord('私域+线下零售流水', `配置支付方式 ${privateCustomActivePaymentMethod} 统一激励比例：${ratio}`);
+                                    alert(`已设置 ${privateCustomActivePaymentMethod} 的统一奖励比例为 ${ratio}`);
+                                  }
+                                }}
+                                className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                              >
+                                保存
+                              </button>
+                            </div>
+                          </div>
+
                           <div className="flex items-center justify-between">
                             <h4 className="text-sm font-bold text-gray-700">商品激励配置 ({privateCustomActivePaymentMethod})</h4>
                             <div className="flex items-center space-x-3">
@@ -4216,106 +5079,25 @@ const BusinessSettingsView = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-600 w-20">商品编码</span>
-                  <div className="flex-1 relative">
-                    <input type="text" placeholder="输入商品编码精确搜索" className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
-                    <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  </div>
+                  <input type="text" placeholder="输入商品编码精确搜索" className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600 w-20">条形码</span>
-                  <input type="text" placeholder="输入商品条形码" className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600 w-20">批准文号</span>
-                  <div className="flex-1 flex space-x-2">
-                    <input type="text" placeholder="输入批准文号" className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
-                    <button className="px-4 py-1.5 bg-white border border-blue-600 text-blue-600 rounded text-sm hover:bg-blue-50">查询</button>
-                  </div>
+                  <span className="text-sm text-gray-600 w-20">商品条码</span>
+                  <input type="text" placeholder="输入商品条码" className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-blue-400" />
                 </div>
               </div>
-
-              <div className="bg-orange-50 border border-orange-100 rounded px-3 py-2 flex items-center space-x-2">
-                <div className="w-4 h-4 rounded-full border border-orange-400 flex items-center justify-center text-[10px] text-orange-400 font-bold">!</div>
-                <span className="text-xs text-orange-400">已参与“按商品批号”政策商品不可勾选</span>
-              </div>
-
-              <div className="border border-gray-100 rounded overflow-hidden">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-4 py-2 w-10"><input type="checkbox" className="rounded border-gray-300" /></th>
-                      <th className="px-4 py-2 font-medium text-gray-600">商品图片</th>
-                      <th className="px-4 py-2 font-medium text-gray-600">商品信息</th>
-                      <th className="px-4 py-2 font-medium text-gray-600">关联活动</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {[
-                      { img: 'https://picsum.photos/seed/med1/40/40', name: '肠炎宁片', spec: '0.24g*24片', code: '009385', activity: '564169/商品冲突弹...' },
-                      { img: 'https://picsum.photos/seed/med2/40/40', name: '肠炎宁片 (康恩贝)', spec: '0.42g*48s', code: '144081', activity: '564168/厂家模式活...' },
-                      { img: 'https://picsum.photos/seed/med3/40/40', name: '0000010', spec: '6g', code: '0000010', activity: '564169/商品冲突弹...' },
-                    ].map((p, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50">
-                        <td className="px-4 py-4"><input type="checkbox" className="rounded border-gray-300" /></td>
-                        <td className="px-4 py-4">
-                          <img src={p.img} alt="" className="w-10 h-10 rounded border border-gray-100" referrerPolicy="no-referrer" />
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="font-medium text-gray-800">{p.name}</div>
-                          <div className="text-xs text-gray-400">规格：{p.spec}</div>
-                          <div className="text-xs text-gray-400">商品编码：{p.code}</div>
-                        </td>
-                        <td className="px-4 py-4 text-blue-600 text-xs">
-                          {p.activity}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             </div>
 
-            <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-              <div className="text-xs text-gray-400">提示：活动商品最多添加100件</div>
-              <div className="flex items-center space-x-3">
-                <button 
-                  onClick={() => setShowPrivateProductModal(false)}
-                  className="px-6 py-1.5 text-sm border border-blue-600 text-blue-600 rounded hover:bg-blue-50"
-                >
-                  取消
-                </button>
-                <button 
-                  onClick={() => {
-                    handleAddPrivateProduct([{ code: '009385', ratio: '' }]);
-                    setShowPrivateProductModal(false);
-                  }}
-                  className="px-6 py-1.5 text-sm bg-blue-400 text-white rounded hover:bg-blue-500"
-                >
-                  确定
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Validation Modal */}
-      {showValidationModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-[400px] shadow-xl">
-            <div className="flex justify-between items-center p-4 border-b border-gray-100">
-              <h3 className="font-medium text-gray-800">提示</h3>
-              <button onClick={() => setShowValidationModal(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6 text-center text-gray-600">
-              {validationMessage}
-            </div>
-            <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-end space-x-3">
               <button 
-                onClick={() => setShowValidationModal(false)}
-                className="px-6 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                onClick={() => setShowPrivateProductModal(false)}
+                className="px-4 py-1.5 text-sm border border-gray-300 rounded text-gray-600 hover:bg-white"
+              >
+                取消
+              </button>
+              <button 
+                onClick={() => setShowPrivateProductModal(false)}
+                className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 确定
               </button>
@@ -4323,25 +5105,310 @@ const BusinessSettingsView = () => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
 
-      {/* Floating Action Buttons */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-        <button className="flex items-center space-x-1 px-4 py-2 border border-blue-600 text-blue-600 rounded bg-white text-sm hover:bg-blue-50 transition-colors shadow-sm font-medium">
-          <Edit3 size={14} />
-          <span>编辑</span>
-        </button>
+const TargetManagementView = () => {
+  const [searchName, setSearchName] = useState('');
+  
+  const mockData = [
+    {
+      id: '1',
+      name: '爆品目标1778132987',
+      status: '已中止',
+      period: '2027-05至2027-05',
+      type: '爆品目标',
+      dimension: '销售额',
+      storeProgress: { achieved: 0, target: 10, rate: '0%' },
+      employeeProgress: { achieved: 0, target: 0, rate: '0%' },
+      riskCount: 0,
+      scope: { regions: 1, stores: 1, employees: 0 },
+      maintenance: { creator: '666666_admin', createTime: '2026.05.07 13:49:47', modifier: '666666_admin', modifyTime: '2026.05.07 13:49:48' },
+      isDraft: false
+    },
+    {
+      id: '2',
+      name: '草稿',
+      status: '草稿',
+      period: '2027至2027',
+      type: '爆品目标',
+      dimension: '销售量',
+      storeProgress: { achieved: 0, target: 10, rate: '0%' },
+      employeeProgress: { achieved: 0, target: 0, rate: '0%' },
+      riskCount: 0,
+      scope: { regions: 1, stores: 1, employees: 0 },
+      maintenance: { creator: '666666_admin', createTime: '2026.05.07 13:46:34', modifier: '666666_admin', modifyTime: '2026.05.07 13:46:34' },
+      isDraft: true
+    },
+    {
+      id: '3',
+      name: '爆品目标1778132685',
+      status: '已中止',
+      period: '2027至2027',
+      type: '爆品目标',
+      dimension: '销售额',
+      storeProgress: { achieved: 0, target: 10, rate: '0%' },
+      employeeProgress: { achieved: 0, target: 0, rate: '0%' },
+      riskCount: 0,
+      scope: { regions: 1, stores: 1, employees: 0 },
+      maintenance: { creator: '666666_admin', createTime: '2026.05.07 13:44:45', modifier: '666666_admin', modifyTime: '2026.05.07 13:44:50' },
+      isDraft: false
+    },
+    {
+      id: '4',
+      name: '系列目标自动化1778132...',
+      status: '已中止',
+      period: '2027至2027',
+      type: '系列目标',
+      dimension: '销售量',
+      storeProgress: { achieved: 0, target: 5, rate: '0%' },
+      employeeProgress: { achieved: 0, target: 10, rate: '0%' },
+      riskCount: 0,
+      scope: { regions: 1, stores: 1, employees: 2 },
+      maintenance: { creator: '666666_admin', createTime: '2026.05.07 13:39:07', modifier: '666666_admin', modifyTime: '2026.05.07 13:39:12' },
+      isDraft: false
+    },
+    {
+      id: '5',
+      name: '系列目标自动化1778132...',
+      status: '已中止',
+      period: '2027至2027',
+      type: '系列目标',
+      dimension: '销售量',
+      storeProgress: { achieved: 0, target: 5, rate: '0%' },
+      employeeProgress: { achieved: 0, target: 10, rate: '0%' },
+      riskCount: 0,
+      scope: { regions: 1, stores: 1, employees: 2 },
+      maintenance: { creator: '666666_admin', createTime: '2026.05.07 13:39:04', modifier: '666666_admin', modifyTime: '2026.05.07 13:39:11' },
+      isDraft: false
+    }
+  ];
+
+  return (
+    <div className="flex-1 flex flex-col h-full bg-[#f6f8fa]">
+      <div className="p-4 bg-white border-b border-gray-100 flex justify-between items-center h-[52px]">
+        <h2 className="text-sm font-bold text-gray-800">目标管理</h2>
       </div>
-      <div className="absolute bottom-4 right-4">
-        <button 
-          onClick={handleSaveSettings}
-          className="px-6 py-2 bg-blue-600 text-white rounded shadow-md hover:bg-blue-700 transition-colors text-sm font-medium"
-        >
-          保存设置
-        </button>
+
+      {/* Filter Bar */}
+      <div className="p-4 bg-white border-b border-gray-100">
+        <div className="flex flex-wrap gap-4 items-center mb-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-gray-500 w-16 text-right">目标名称</span>
+            <input 
+              type="text" 
+              placeholder="请输入目标名称" 
+              className="border border-gray-200 rounded px-2 py-1 text-xs w-48 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-gray-500 w-16 text-right">目标类型</span>
+            <select className="border border-gray-200 rounded px-2 py-1 text-xs w-40 focus:outline-none bg-white">
+              <option>请选择</option>
+              <option>爆品目标</option>
+              <option>系列目标</option>
+            </select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-gray-500 w-16 text-right">考核维度</span>
+            <select className="border border-gray-200 rounded px-2 py-1 text-xs w-40 focus:outline-none bg-white">
+              <option>请选择</option>
+              <option>销售额</option>
+              <option>销售量</option>
+            </select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-gray-500 w-16 text-right">目标状态</span>
+            <select className="border border-gray-200 rounded px-2 py-1 text-xs w-40 focus:outline-none bg-white">
+              <option>请选择</option>
+              <option>进行中</option>
+              <option>草稿</option>
+              <option>已中止</option>
+            </select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-gray-500 w-16 text-right">活动商品</span>
+            <div className="flex">
+              <select className="border border-gray-200 rounded-l px-2 py-1 text-xs w-24 focus:outline-none bg-white border-r-0">
+                <option>商品名称</option>
+                <option>商品编码</option>
+                <option>商品条码</option>
+              </select>
+              <input 
+                type="text" 
+                placeholder="请输入商品名称" 
+                className="border border-gray-200 rounded-r px-2 py-1 text-xs w-48 focus:outline-none focus:ring-1 focus:ring-blue-100"
+              />
+            </div>
+          </div>
+        </div>
+        <div className="flex space-x-3">
+          <button className="bg-blue-600 text-white px-5 py-1 rounded text-xs font-medium hover:bg-blue-700 transition-colors">查询</button>
+          <button className="border border-gray-200 text-gray-600 px-5 py-1 rounded text-xs font-medium hover:bg-gray-50 transition-colors">重置</button>
+          <div className="relative group">
+            <button className="border border-blue-600 text-blue-600 px-5 py-1 rounded text-xs font-medium flex items-center hover:bg-blue-50">
+              导出 <ChevronDown size={14} className="ml-1" />
+            </button>
+          </div>
+          <button className="bg-blue-600 text-white px-4 py-1 rounded text-xs font-medium flex items-center hover:bg-blue-700">
+            <Plus size={14} className="mr-1" /> 新建目标
+          </button>
+        </div>
+      </div>
+
+      {/* Table Head */}
+      <div className="bg-white px-4 py-2 border-b border-gray-100 flex items-center text-[11px] text-gray-400 font-bold uppercase tracking-wider sticky top-0 z-10 min-w-[1280px]">
+        <div className="w-[28%]">目标信息</div>
+        <div className="w-[8%]">考核维度</div>
+        <div className="w-[12%] flex items-center">门店整体进度 <Info size={12} className="ml-1 opacity-50" /></div>
+        <div className="w-[12%] flex items-center">员工整体进度 <Info size={12} className="ml-1 opacity-50" /></div>
+        <div className="w-[10%]">风险商品/品类/组合数</div>
+        <div className="w-[12%]">参与范围</div>
+        <div className="w-[12%]">维护信息</div>
+        <div className="w-[6%] text-right pr-4">操作</div>
+      </div>
+
+      {/* Table Body */}
+      <div className="flex-1 overflow-y-auto no-scrollbar min-w-[1280px]">
+        {mockData.map((item) => (
+          <div key={item.id} className="bg-white px-4 py-4 border-b border-gray-50 hover:bg-blue-50/10 transition-colors flex items-center">
+            {/* Target Info */}
+            <div className="w-[28%] flex items-start space-x-3">
+              <div className="w-16 h-12 bg-gray-50 rounded border border-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center p-0.5">
+                <img src={`https://picsum.photos/seed/${item.id}/64/48`} alt="" className="w-full h-full object-cover opacity-80" referrerPolicy="no-referrer" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center space-x-2">
+                  <span className={`text-sm font-bold truncate ${item.isDraft ? 'text-gray-400' : 'text-gray-800'}`}>{item.name}</span>
+                  <span className={`flex-shrink-0 px-1 border rounded-[2px] text-[10px] scale-90 ${
+                    item.status === '已中止' ? 'bg-pink-50 text-pink-500 border-pink-100' : 
+                    item.status === '草稿' ? 'bg-gray-50 text-gray-400 border-gray-200' :
+                    'bg-green-50 text-green-600 border-green-100'
+                  }`}>{item.status}</span>
+                </div>
+                <div className="mt-1 space-y-0.5">
+                  <div className="text-[11px] text-gray-500">
+                    <span className="text-gray-400">任务周期:</span> {item.period}
+                  </div>
+                  <div className="text-[11px] text-gray-500">
+                    <span className="text-gray-400">类型:</span> {item.type}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Assessment */}
+            <div className="w-[8%] text-xs text-gray-600 font-medium">
+              {item.dimension}
+            </div>
+
+            {/* Store Progress */}
+            <div className="w-[12%] text-[11px] text-gray-500 space-y-1">
+              <div className="flex justify-between w-28">
+                <span>达成值:</span>
+                <span className="font-bold text-gray-700">{item.storeProgress.achieved}</span>
+              </div>
+              <div className="flex justify-between w-28">
+                <span>目标值:</span>
+                <span className="font-bold text-gray-700">{item.storeProgress.target}</span>
+              </div>
+              <div className="flex justify-between w-28">
+                <span>达成率:</span>
+                <span className="font-bold text-blue-600">{item.storeProgress.rate}</span>
+              </div>
+            </div>
+
+            {/* Employee Progress */}
+            <div className="w-[12%] text-[11px] text-gray-500 space-y-1">
+              <div className="flex justify-between w-28">
+                <span>达成值:</span>
+                <span className="font-bold text-gray-700">{item.employeeProgress.achieved}</span>
+              </div>
+              <div className="flex justify-between w-28">
+                <span>目标值:</span>
+                <span className="font-bold text-gray-700">{item.employeeProgress.target}</span>
+              </div>
+              <div className="flex justify-between w-28">
+                <span>达成率:</span>
+                <span className="font-bold text-blue-600">{item.employeeProgress.rate}</span>
+              </div>
+            </div>
+
+            {/* Risk */}
+            <div className="w-[10%] text-xs text-gray-800 font-bold pl-12">
+              {item.riskCount}
+            </div>
+
+            {/* Scope */}
+            <div className="w-[12%] text-[11px] text-gray-500 space-y-0.5">
+              <div className="flex items-center">
+                <span className="text-gray-400 w-16">参与区域数:</span>
+                <span className="font-bold text-gray-700 ml-1">{item.scope.regions}</span>
+              </div>
+              <div className="flex items-center">
+                <span className="text-gray-400 w-16">参与门店数:</span>
+                <span className="font-bold text-gray-700 ml-1">{item.scope.stores}</span>
+              </div>
+              <div className="flex items-center">
+                <span className="text-gray-400 w-16">参与员工数:</span>
+                <span className="font-bold text-gray-700 ml-1">{item.scope.employees}</span>
+              </div>
+            </div>
+
+            {/* Maintenance */}
+            <div className="w-[12%] text-[10px] text-gray-400 space-y-0.5 pr-2">
+              <div>添加人: {item.maintenance.creator}</div>
+              <div>添加时间: {item.maintenance.createTime}</div>
+              <div>最后修改人: {item.maintenance.modifier}</div>
+              <div>最后修改时间: {item.maintenance.modifyTime}</div>
+            </div>
+
+            {/* Actions */}
+            <div className="w-[6%] flex justify-end pr-4">
+              <div className="flex flex-wrap justify-end gap-x-2 gap-y-1 max-w-[80px]">
+                {item.isDraft ? (
+                  <>
+                    <button className="text-blue-600 hover:underline text-[11px]">编辑</button>
+                    <button className="text-blue-600 hover:underline text-[11px]">发布</button>
+                    <button className="text-blue-600 hover:underline text-[11px]">删除</button>
+                    <button className="text-blue-600 hover:underline text-[11px]">复制</button>
+                  </>
+                ) : (
+                  <button className="text-blue-600 hover:underline text-[11px]">复制</button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+        {/* Pagination placeholder */}
+        <div className="bg-white p-4 border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
+          <div className="flex items-center">共 4451 条</div>
+          <div className="flex items-center space-x-1">
+            <button className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-400 hover:bg-gray-50">&lt;</button>
+            <button className="w-6 h-6 flex items-center justify-center border border-blue-600 rounded bg-blue-50 text-blue-600 font-bold">1</button>
+            <button className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-400 hover:bg-gray-50">2</button>
+            <button className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-400 hover:bg-gray-50">3</button>
+            <button className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-400 hover:bg-gray-50">4</button>
+            <button className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-400 hover:bg-gray-50">5</button>
+            <button className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-400 hover:bg-gray-50">6</button>
+            <span className="px-2">...</span>
+            <button className="w-8 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-400 hover:bg-gray-50">891</button>
+            <button className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-400 hover:bg-gray-50">&gt;</button>
+            <select className="border border-gray-200 rounded px-1 py-0.5 ml-2">
+              <option>5条/页</option>
+              <option>10条/页</option>
+            </select>
+            <span className="ml-2">跳转至</span>
+            <input type="text" className="border border-gray-200 rounded w-8 px-1 py-0.5 text-center" defaultValue="1" />
+            <span>页</span>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
+
 
 const TargetManagementDimensionView = () => {
   const [showTargetActivityModal, setShowTargetActivityModal] = useState(false);
@@ -4557,19 +5624,29 @@ const TargetManagementDimensionView = () => {
 };
 
 
-const RobotAdoptionView = () => {
+const RobotAdoptionView = ({ 
+  onNavigateToGroups, 
+  onNavigateToPrivate,
+  onNavigateToRewardWithOrder
+}: { 
+  onNavigateToGroups?: () => void, 
+  onNavigateToPrivate?: () => void,
+  onNavigateToRewardWithOrder?: (orderCode: string) => void
+}) => {
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  const [showLikesModal, setShowLikesModal] = useState(false);
   
   const stats = [
-    { label: '群聊机器人', value: '12', subValue: '共计群数', extraInfo: '共计 1500 人', icon: <MessageCircle className="text-blue-500" size={20} /> },
+    { label: '群聊机器人', value: '12', subValue: '共计群数', extraInfo: '共计 1500 人', icon: <MessageCircle className="text-blue-500" size={20} />, subClickable: true },
     { 
       label: '私聊机器人', 
       value: '1373', 
       subValue: '已添加人数', 
       icon: <User className="text-orange-500" size={20} />,
       clickable: true,
+      subClickable: true, // Allow navigating to management via subLabel or just click
       extraStats: [
-        { label: '点赞次数', value: '45.2k' }
+        { label: '大单来了/收益秘籍小程序点赞次数', value: '45.2k' }
       ]
     },
   ];
@@ -4598,7 +5675,7 @@ const RobotAdoptionView = () => {
     >
       {/* Module Title */}
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-bold text-gray-800">机器人普及情况</h2>
+        <h2 className="text-lg font-bold text-gray-800">机器人普及</h2>
         <div className="text-xs text-gray-400">数据更新时间: 2026-03-18 08:31</div>
       </div>
 
@@ -4609,22 +5686,63 @@ const RobotAdoptionView = () => {
             <div className="flex justify-between items-start relative z-10">
               <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-blue-50 transition-colors">{stat.icon}</div>
               {stat.extraStats && (
-                <div className="flex flex-col items-end">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{stat.extraStats[0].label}</span>
-                  <span className="text-sm font-bold text-orange-500">{stat.extraStats[0].value}</span>
+                <div 
+                  className="flex flex-col items-end cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors group/like"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (stat.extraStats?.[0].label === '大单来了/收益秘籍小程序点赞次数') {
+                      setShowLikesModal(true);
+                    }
+                  }}
+                >
+                  <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider group-hover/like:text-blue-500">{stat.extraStats[0].label}</span>
+                  <div className="flex items-center">
+                    <span className="text-sm font-bold text-orange-500 group-hover/like:text-orange-600">{stat.extraStats[0].value}</span>
+                    <ExternalLink size={10} className="ml-1 text-gray-300 opacity-0 group-hover/like:opacity-100 transition-opacity" />
+                  </div>
                 </div>
               )}
             </div>
             <div className="mt-3 relative z-10">
               <div 
-                className={`text-2xl font-bold text-gray-800 ${stat.clickable ? 'cursor-pointer hover:text-blue-600 transition-colors inline-block' : ''}`}
-                onClick={() => stat.clickable && setShowEmployeeModal(true)}
+                className={`text-2xl font-bold text-gray-800 ${(stat.clickable || stat.subClickable) ? 'cursor-pointer hover:text-blue-600 transition-colors inline-block' : ''}`}
+                onClick={() => {
+                  if (stat.clickable && stat.label === '私聊机器人') {
+                    // Show modal for employees, but maybe user wants management? 
+                    // Let's stick to showing modal if clickable is true, 
+                    // and use subClickable for management navigation.
+                    setShowEmployeeModal(true);
+                  } else if (stat.clickable) {
+                    setShowEmployeeModal(true);
+                  }
+                  
+                  if (stat.subClickable) {
+                    if (stat.label === '群聊机器人') onNavigateToGroups?.();
+                    if (stat.label === '私聊机器人') onNavigateToPrivate?.();
+                  }
+                }}
               >
                 {stat.value}
-                {stat.clickable && <ExternalLink size={14} className="inline ml-1 mb-1 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                {(stat.clickable || stat.subClickable) && <ExternalLink size={14} className="inline ml-1 mb-1 opacity-0 group-hover:opacity-100 transition-opacity" />}
               </div>
               <div className="text-xs text-gray-400 mt-1 flex justify-between">
-                <span>{stat.label} - {stat.subValue}</span>
+                <span>
+                  {stat.label} - 
+                  {stat.subClickable ? (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (stat.label === '群聊机器人') onNavigateToGroups?.();
+                        if (stat.label === '私聊机器人') onNavigateToPrivate?.();
+                      }}
+                      className="text-blue-500 hover:underline hover:text-blue-700 cursor-pointer font-bold ml-1 px-1 rounded hover:bg-blue-50 transition-colors"
+                    >
+                      {stat.subValue}
+                    </button>
+                  ) : (
+                    <span className="ml-1">{stat.subValue}</span>
+                  )}
+                </span>
                 {stat.extraInfo && <span>{stat.extraInfo}</span>}
               </div>
             </div>
@@ -4652,7 +5770,7 @@ const RobotAdoptionView = () => {
                 <tr>
                   <th className="px-4 py-3 font-medium">职位</th>
                   <th className="px-4 py-3 font-medium">已添加人数</th>
-                  <th className="px-4 py-3 font-medium text-right">点赞次数</th>
+                  <th className="px-4 py-3 font-medium text-right whitespace-nowrap">大单来了/收益秘籍小程序点赞次数</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -4660,7 +5778,14 @@ const RobotAdoptionView = () => {
                   <tr key={idx} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 font-medium text-gray-700">{item.role}</td>
                     <td className="px-4 py-3 text-gray-600 font-medium">{item.count}</td>
-                    <td className="px-4 py-3 text-orange-500 font-bold text-right">{item.likeCount.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-orange-500 font-bold text-right">
+                      <button 
+                        onClick={() => setShowLikesModal(true)}
+                        className="hover:underline hover:text-orange-600 transition-colors cursor-pointer"
+                      >
+                        {item.likeCount.toLocaleString()}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -4806,11 +5931,430 @@ const RobotAdoptionView = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Likes Modal */}
+      <AnimatePresence>
+        {showLikesModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[70vh] flex flex-col overflow-hidden"
+            >
+              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                <div>
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-pink-50 rounded-lg flex items-center justify-center mr-3">
+                      <ThumbsUp className="text-pink-500" size={18} />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-800">大单来了/收益秘籍小程序点赞详情</h3>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1 ml-11">统计所有对大单来了/收益秘籍小程序点赞的员工明细</p>
+                </div>
+                <div className="flex items-center space-x-3">
+                   <button 
+                    onClick={() => {
+                      const headers = ['员工姓名', '员工编码', '角色', '所属机构', '点赞时间', 'Erp订单编码'];
+                      const dataRows = [
+                        ['张益达', '1739165503571', '店长', '海典智慧药房分店 A', '2026-03-24 10:15:22', 'ERP202603240001'],
+                        ['李阿美', '1690003824994', '店员', '海典智慧药房分店 B', '2026-03-24 11:20:05', 'ERP202603240002'],
+                        ['赵铁柱', '1709614917226', '执业药师', '海典智慧药房分店 C', '2026-03-24 09:05:12', 'ERP202603240003'],
+                        ['周日明', 'EMP1004', '店长', '海典大药房', '2026-03-23 13:16:35', 'ERP202603230004'],
+                        ['王小芬', 'EMP1005', '收银员', '双品汇店', '2026-03-23 15:42:10', 'ERP202603230005'],
+                        ['马建国', 'EMP1006', '店长', '分店 D', '2026-03-22 08:20:15', 'ERP202603220006'],
+                        ['刘晓丽', 'EMP1007', '店员', '分店 E', '2026-03-22 14:11:30', 'ERP202603220007'],
+                        ['孙悟空', 'EMP1888', '配送员', '总店', '2026-03-21 17:00:00', 'ERP202603210008'],
+                      ];
+                      const csvContent = [headers.join(',')].concat(dataRows.map(row => row.join(','))).join('\n');
+                      const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+                      const link = document.createElement("a");
+                      const url = URL.createObjectURL(blob);
+                      link.setAttribute("href", url);
+                      link.setAttribute("download", `大单来了_收益秘籍小程序点赞详情.csv`);
+                      link.style.visibility = 'hidden';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                    className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+                  >
+                    <Download size={14} className="mr-2" />
+                    导出表格数据
+                  </button>
+                  <button onClick={() => setShowLikesModal(false)} className="bg-gray-100 p-2 rounded-full text-gray-400 hover:bg-gray-200 transition-colors">
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-auto p-4 bg-gray-50/50">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-[#fcfdfe] text-gray-500 font-bold text-[11px] uppercase tracking-wider sticky top-0 z-10 border-b border-gray-100">
+                      <tr>
+                        <th className="px-6 py-4">员工姓名</th>
+                        <th className="px-6 py-4">员工编码</th>
+                        <th className="px-6 py-4">职位角色</th>
+                        <th className="px-6 py-4">所属机构</th>
+                        <th className="px-6 py-4">点赞时间</th>
+                        <th className="px-6 py-4">Erp订单编码</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {[
+                        { name: '张益达', code: '1739165503571', role: '店长', org: '海典智慧药房分店 A', time: '2026-03-24 10:15:22', erpOrderCode: 'ERP202603240001' },
+                        { name: '李阿美', code: '1690003824994', role: '店员', org: '海典智慧药房分店 B', time: '2026-03-24 11:20:05', erpOrderCode: 'ERP202603240002' },
+                        { name: '赵铁柱', code: '1709614917226', role: '执业药师', org: '海典智慧药房分店 C', time: '2026-03-24 09:05:12', erpOrderCode: 'ERP202603240003' },
+                        { name: '周日明', code: 'EMP1004', role: '店长', org: '海典大药房', time: '2026-03-23 13:16:35', erpOrderCode: 'ERP202603230004' },
+                        { name: '王小芬', code: 'EMP1005', role: '收银员', org: '双品汇店', time: '2026-03-23 15:42:10', erpOrderCode: 'ERP202603230005' },
+                        { name: '马建国', code: 'EMP1006', role: '店长', org: '分店 D', time: '2026-03-22 08:20:15', erpOrderCode: 'ERP202603220006' },
+                        { name: '刘晓丽', code: 'EMP1007', role: '店员', org: '分店 E', time: '2026-03-22 14:11:30', erpOrderCode: 'ERP202603220007' },
+                        { name: '孙悟空', code: 'EMP1888', role: '配送员', org: '总店', time: '2026-03-21 17:00:00', erpOrderCode: 'ERP202603210008' },
+                      ].map((item, idx) => (
+                        <tr key={idx} className="hover:bg-blue-50/20 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-gray-800">{item.name}</div>
+                          </td>
+                          <td className="px-6 py-4 font-mono text-xs text-blue-500 font-bold">{item.code}</td>
+                          <td className="px-6 py-4">
+                            <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-[10px] font-bold border border-gray-200">
+                              {item.role}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-600 font-medium">{item.org}</td>
+                          <td className="px-6 py-4 text-[10px] text-gray-400 font-mono tracking-tight">{item.time}</td>
+                          <td className="px-6 py-4">
+                            <button 
+                              onClick={() => {
+                                setShowLikesModal(false);
+                                onNavigateToRewardWithOrder?.(item.erpOrderCode);
+                              }}
+                              className="text-blue-600 hover:underline font-mono text-xs font-bold"
+                            >
+                              {item.erpOrderCode}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center bg-white shadow-sm z-20">
+                <div className="text-xs text-gray-400">
+                  当前显示 <span className="font-bold text-gray-800">8</span> 条数据
+                </div>
+                <button onClick={() => setShowLikesModal(false)} className="px-8 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all">
+                  确认
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
 
-const EmployeeSocialInteractionView = ({ onNavigate }: { onNavigate?: (subItem: string) => void }) => {
+const PrivateChatManagementView = () => {
+  const [showLikesModal, setShowLikesModal] = useState(false);
+  const [selectedRobot, setSelectedRobot] = useState<any>(null);
+
+  const robots = [
+    { 
+      name: '智能助手-小星', 
+      status: '运行中', 
+      likeCount: 1373, 
+      userCount: 856, 
+      messageCount: 15420,
+      createTime: '2025-10-15 08:30:00'
+    },
+    { 
+      name: '慢病管家-小医', 
+      status: '运行中', 
+      likeCount: 942, 
+      userCount: 517, 
+      messageCount: 8230,
+      createTime: '2025-11-20 10:15:30'
+    }
+  ];
+
+  const likeDetails = [
+    { name: '张益达', code: '1739165503571', role: '店长', org: '海典智慧药房分店 A', time: '2026-03-24 10:15:22' },
+    { name: '李阿美', code: '1690003824994', role: '店员', org: '海典智慧药房分店 B', time: '2026-03-24 11:20:05' },
+    { name: '赵铁柱', code: '1709614917226', role: '执业药师', org: '海典智慧药房分店 C', time: '2026-03-24 09:05:12' },
+    { name: '周日明', code: 'EMP1004', role: '店长', org: '海典大药房', time: '2026-03-23 13:16:35' },
+    { name: '王小芬', code: 'EMP1005', role: '收银员', org: '双品汇店', time: '2026-03-23 15:42:10' },
+    { name: '马建国', code: 'EMP1006', role: '店长', org: '分店 D', time: '2026-03-22 08:20:15' },
+    { name: '刘晓丽', code: 'EMP1007', role: '店员', org: '分店 E', time: '2026-03-22 14:11:30' },
+    { name: '孙悟空', code: 'EMP1888', role: '配送员', org: '总店', time: '2026-03-21 17:00:00' },
+  ];
+
+  const handleExport = () => {
+    const headers = ['员工姓名', '员工编码', '角色', '所属机构', '点赞时间'];
+    const csvContent = [headers.join(',')].concat(
+      likeDetails.map(item => `${item.name},${item.code},${item.role},\"${item.org}\",${item.time}`)
+    ).join('\n');
+    
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `大单来了_收益秘籍小程序点赞详情_${selectedRobot?.name || ''}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="p-6 bg-[#f8fafc] min-h-screen">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">私聊机器人管理</h2>
+          <p className="text-sm text-gray-500 mt-1 flex items-center">
+            <Info size={14} className="mr-1 text-blue-400" />
+            查看私聊机器人的运营数据及其被员工进行了大单来了/收益秘籍小程序点赞、使用的明细统计
+          </p>
+        </div>
+        <div className="flex space-x-3">
+          <button className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
+            数据看板
+          </button>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+            <Plus size={16} className="mr-2" />
+            创建机器人
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        {[
+          { label: '活跃机器人', value: '2', unit: '个', icon: <MessageSquare size={20} className="text-blue-500" />, bg: 'bg-blue-50' },
+          { label: '大单来了/收益秘籍小程序点赞次数', value: '2,315', unit: '次', icon: <ThumbsUp size={20} className="text-pink-500" />, bg: 'bg-pink-50' },
+          { label: '服务覆盖人数', value: '1,373', unit: '人', icon: <Users size={20} className="text-purple-500" />, bg: 'bg-purple-50' },
+          { label: '处理会话数', value: '23,640', unit: '条', icon: <MessageCircle size={20} className="text-green-500" />, bg: 'bg-green-50' },
+        ].map((stat, i) => (
+          <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center">
+            <div className={`w-12 h-12 ${stat.bg} rounded-xl flex items-center justify-center mr-4`}>
+              {stat.icon}
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 font-medium mb-1">{stat.label}</p>
+              <div className="flex items-baseline">
+                <span className="text-2xl font-black text-gray-800">{stat.value}</span>
+                <span className="text-[10px] text-gray-400 ml-1">{stat.unit}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center">
+          <h3 className="font-bold text-gray-800">机器人列表</h3>
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+              <input type="text" placeholder="搜索机器人名称..." className="pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-sm outline-none focus:ring-1 focus:ring-blue-400 w-64" />
+            </div>
+            <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+              <Filter size={18} />
+            </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-[#fcfdfe] text-gray-400 font-bold text-[10px] uppercase tracking-wider">
+              <tr>
+                <th className="px-6 py-4 border-b">机器人名称</th>
+                <th className="px-6 py-4 border-b">状态</th>
+                <th className="px-6 py-4 border-b">大单来了/收益秘籍小程序点赞次数</th>
+                <th className="px-6 py-4 border-b">使用人数</th>
+                <th className="px-6 py-4 border-b">累计消息数</th>
+                <th className="px-6 py-4 border-b">创建时间</th>
+                <th className="px-6 py-4 border-b text-center">操作</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50 text-gray-600 font-medium">
+              {robots.map((robot, idx) => (
+                <tr key={idx} className="hover:bg-blue-50/20 transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center">
+                      <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-xl flex items-center justify-center mr-3 shadow-md shadow-blue-100">
+                        <MessageSquare size={18} />
+                      </div>
+                      <span className="font-bold text-gray-800">{robot.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center px-2 py-1 rounded-full bg-green-50 text-green-600 text-[10px] w-fit font-black border border-green-100">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
+                      {robot.status}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button 
+                      onClick={() => {
+                        setSelectedRobot(robot);
+                        setShowLikesModal(true);
+                      }}
+                      className="group/btn relative px-3 py-1 rounded-lg hover:bg-pink-50 transition-colors"
+                    >
+                      <div className="flex items-center space-x-1.5">
+                        <ThumbsUp size={16} className="text-pink-400 group-hover/btn:scale-125 transition-transform" />
+                        <span className="text-lg font-black text-gray-800">{robot.likeCount.toLocaleString()}</span>
+                      </div>
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/btn:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+                        点击查看详情
+                      </div>
+                    </button>
+                  </td>
+                  <td className="px-6 py-4 text-gray-800 font-black">{robot.userCount.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-gray-500">{robot.messageCount.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-[10px] text-gray-400 font-mono">{robot.createTime}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-center space-x-4">
+                      <button className="text-blue-600 hover:text-blue-800 text-xs font-bold transition-colors">查看明细</button>
+                      <button className="text-gray-400 hover:text-blue-500 transition-colors"><Edit3 size={16} /></button>
+                      <button className="text-gray-300 hover:text-red-500 transition-colors"><X size={18} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {showLikesModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden"
+            >
+              <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white relative">
+                <div className="absolute left-0 top-0 w-1.5 h-full bg-pink-500"></div>
+                <div>
+                  <h3 className="text-xl font-black text-gray-800 flex items-center">
+                    <div className="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center mr-3">
+                      <ThumbsUp className="text-pink-500" size={20} />
+                    </div>
+                    大单来了/收益秘籍小程序点赞明细
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1 ml-13 flex items-center leading-none">
+                    <span className="font-bold text-gray-600 mr-1">{selectedRobot?.name}</span> 的互动记录统计
+                  </p>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <button 
+                    onClick={handleExport}
+                    className="flex items-center bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+                  >
+                    <Download size={16} className="mr-2" />
+                    导出表格
+                  </button>
+                  <button onClick={() => setShowLikesModal(false)} className="bg-gray-50 p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+                    <X size={24} />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-4 bg-gray-50/30 scrollbar-thin scrollbar-thumb-gray-200">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-[#fcfdfe] text-gray-400 text-[10px] font-black uppercase tracking-widest sticky top-0 z-10 border-b border-gray-50">
+                      <tr>
+                        <th className="px-8 py-4">员工姓名</th>
+                        <th className="px-8 py-4">员工编码</th>
+                        <th className="px-8 py-4">职位角色</th>
+                        <th className="px-8 py-4">所属机构</th>
+                        <th className="px-8 py-4">点赞时间</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {likeDetails.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-blue-50/10 transition-colors group">
+                          <td className="px-8 py-4">
+                            <div className="font-black text-gray-800 flex items-center">
+                              <div className="w-2 h-2 bg-pink-400 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                              {item.name}
+                            </div>
+                          </td>
+                          <td className="px-8 py-4 font-mono text-blue-500 font-bold text-xs">{item.code}</td>
+                          <td className="px-8 py-4">
+                            <span className="px-2.5 py-1 bg-gray-50 text-gray-500 rounded-lg text-[10px] font-black border border-gray-100 italic">
+                              {item.role}
+                            </span>
+                          </td>
+                          <td className="px-8 py-4 text-gray-600 text-xs font-medium">{item.org}</td>
+                          <td className="px-8 py-4 text-gray-400 text-[11px] font-mono">{item.time}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              <div className="px-8 py-4 border-t border-gray-100 bg-white flex justify-between items-center">
+                <div className="text-xs font-medium text-gray-400">
+                  当前显示 <span className="text-gray-700 font-black">{likeDetails.length}</span> 条记录
+                </div>
+                <button 
+                  onClick={() => setShowLikesModal(false)} 
+                  className="px-8 py-2 bg-gray-50 text-gray-600 rounded-xl text-sm font-black hover:bg-gray-100 transition-colors"
+                >
+                  我知道了
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const GroupChatManagementView = () => {
+  return (
+    <div className="p-6 bg-[#f8fafc] min-h-screen">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">群聊机器人管理</h2>
+          <p className="text-sm text-gray-500 mt-1 flex items-center">
+            <Info size={14} className="mr-1 text-blue-400" />
+            配置并管理企微群聊中的智能助手，提升社群互动率
+          </p>
+        </div>
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-100">
+          <Plus size={16} className="mr-2" />
+          创建群机器人
+        </button>
+      </div>
+      
+      <div className="bg-white rounded-3xl border border-gray-100 p-12 flex flex-col items-center justify-center shadow-sm">
+        <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
+          <MessageCircle size={40} className="text-blue-400 opacity-40" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-800 mb-2">正在建设中</h3>
+        <p className="max-w-sm text-center text-gray-400 text-sm leading-relaxed">
+          群聊管理模块即将上线。届时您将可以实现机器人入群授权、关键词自动回复、实时活跃度监控等核心功能，敬请期待。
+        </p>
+        <button className="mt-8 px-8 py-2.5 bg-gray-50 text-blue-600 rounded-xl text-sm font-bold border border-blue-50 hover:bg-blue-50 transition-colors">
+          先去配置私聊机器人
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
+const StaffCircleInteractionView = ({ onNavigate }: { onNavigate?: (subItem: string) => void }) => {
   const [showLikesModal, setShowLikesModal] = useState(false);
   const [showSharesModal, setShowSharesModal] = useState(false);
 
@@ -4953,7 +6497,7 @@ const EmployeeSocialInteractionView = ({ onNavigate }: { onNavigate?: (subItem: 
       className="p-4 space-y-4 bg-gray-50 min-h-full"
     >
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-bold text-gray-800">员工社交互动</h2>
+        <h2 className="text-lg font-bold text-gray-800">店员圈互动</h2>
         <div className="text-xs text-gray-400">数据更新时间: 2026-03-26 23:24</div>
       </div>
 
@@ -5201,11 +6745,17 @@ const EmployeeUsageView = () => {
 const HomeView = ({ 
   onActivityClick,
   onNavigate,
-  onNavigateToRewardDetails
+  onNavigateToRewardDetails,
+  onNavigateToRobotGroups,
+  onNavigateToRobotPrivate,
+  onNavigateToRewardWithOrder
 }: { 
   onActivityClick?: (id: string) => void,
   onNavigate?: (subItem: string) => void,
-  onNavigateToRewardDetails?: (filters: { startDate: string, endDate: string, rewardType: string }) => void
+  onNavigateToRewardDetails?: (filters: { startDate: string, endDate: string, rewardType: string }) => void,
+  onNavigateToRobotGroups?: () => void,
+  onNavigateToRobotPrivate?: () => void,
+  onNavigateToRewardWithOrder?: (orderCode: string) => void
 }) => {
   const [activeTab, setActiveTab] = useState('品种维度');
   const [timeField, setTimeField] = useState('订单创建时间');
@@ -5223,10 +6773,10 @@ const HomeView = ({
       <div className="bg-white px-4 border-b border-gray-200 flex items-center overflow-x-auto no-scrollbar">
         <TabItem label="品种维度" active={activeTab === '品种维度'} onClick={() => setActiveTab('品种维度')} />
         <TabItem label="活动政策维度" active={activeTab === '活动政策维度'} onClick={() => setActiveTab('活动政策维度')} />
-        <TabItem label="活动激励发放情况" active={activeTab === '活动激励发放情况'} onClick={() => setActiveTab('活动激励发放情况')} />
+        <TabItem label="活动激励发放" active={activeTab === '活动激励发放'} onClick={() => setActiveTab('活动激励发放')} />
         <TabItem label="目标管理维度" active={activeTab === '目标管理维度'} onClick={() => setActiveTab('目标管理维度')} />
-        <TabItem label="机器人普及情况" active={activeTab === '机器人普及情况'} onClick={() => setActiveTab('机器人普及情况')} />
-        <TabItem label="员工社交互动" active={activeTab === '员工社交互动'} onClick={() => setActiveTab('员工社交互动')} />
+        <TabItem label="机器人普及" active={activeTab === '机器人普及'} onClick={() => setActiveTab('机器人普及')} />
+        <TabItem label="店员圈互动" active={activeTab === '店员圈互动'} onClick={() => setActiveTab('店员圈互动')} />
         <TabItem label="员工使用情况" active={activeTab === '员工使用情况'} onClick={() => setActiveTab('员工使用情况')} />
       </div>
 
@@ -5247,7 +6797,7 @@ const HomeView = ({
       <div className="flex-1 overflow-y-auto no-scrollbar">
         {activeTab === '品种维度' ? <VarietyDimensionView onActivityClick={onActivityClick} /> : 
          activeTab === '活动政策维度' ? <ActivityDimensionView onActivityClick={onActivityClick} /> : 
-         activeTab === '活动激励发放情况' ? (
+         activeTab === '活动激励发放' ? (
            <IncentiveDistributionView 
              onNavigateToDetails={(filters) => 
                onNavigateToRewardDetails?.({ 
@@ -5259,9 +6809,13 @@ const HomeView = ({
            />
          ) :
          activeTab === '目标管理维度' ? <TargetManagementDimensionView /> :
-         activeTab === '机器人普及情况' ? <RobotAdoptionView /> :
-         activeTab === '员工社交互动' ? (
-           <EmployeeSocialInteractionView 
+          activeTab === '机器人普及' ? <RobotAdoptionView 
+            onNavigateToGroups={onNavigateToRobotGroups} 
+            onNavigateToPrivate={onNavigateToRobotPrivate} 
+            onNavigateToRewardWithOrder={onNavigateToRewardWithOrder}
+          /> :
+         activeTab === '店员圈互动' ? (
+           <StaffCircleInteractionView 
              onNavigate={onNavigate} 
            />
          ) :
@@ -5335,8 +6889,265 @@ const ProductRatioInput = ({ initialRatio, onSave, isManual }: { initialRatio: s
   );
 };
 
+const SingleProductIncentiveModal = ({ 
+  onClose, 
+  onSave 
+}: { 
+  onClose: () => void; 
+  onSave: (policy: any) => void;
+}) => {
+  const [isTiered, setIsTiered] = useState(false);
+  const [thresholdType, setThresholdType] = useState('none');
+  const [marginThreshold, setMarginThreshold] = useState('30');
+  const [calcType, setCalcType] = useState('quantity'); // 按商品数量
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-[1200px] max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+        <div className="flex justify-between items-center p-4 border-b border-gray-100">
+          <h3 className="font-bold text-gray-800">新增单品销售激励政策</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar bg-gray-50/30">
+          {/* Section: Select Products */}
+          <div className="bg-white p-4 rounded border border-gray-100">
+            <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center">
+              激励商品 <span className="text-xs font-normal text-gray-400 ml-2">可选择多个商品批量设置激励</span>
+            </h4>
+            <button className="flex items-center text-blue-600 text-sm hover:underline">
+              <Plus size={16} className="mr-1" /> 选择激励商品
+            </button>
+          </div>
+
+          {/* Section: Rules */}
+          <div className="bg-white p-4 rounded border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-bold text-gray-800 flex items-center">
+                设置单品激励规则 <span className="text-xs font-normal text-gray-400 ml-2">按销售数量计算</span>
+              </h4>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center space-x-6">
+                <span className="text-sm text-gray-600 w-24">激励方式</span>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input 
+                      type="radio" 
+                      checked={!isTiered} 
+                      onChange={() => setIsTiered(false)} 
+                      className="mr-2"
+                    />
+                    <span className="text-sm">无阶梯</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input 
+                      type="radio" 
+                      checked={isTiered} 
+                      onChange={() => setIsTiered(true)} 
+                      className="mr-2"
+                    />
+                    <span className="text-sm">有阶梯</span>
+                  </label>
+                </div>
+              </div>
+
+              {isTiered && (
+                <div className="flex items-center space-x-6">
+                  <span className="text-sm text-gray-600 w-24">统计周期</span>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center cursor-pointer">
+                      <input type="radio" name="term" className="mr-2" defaultChecked />
+                      <span className="text-sm">按单张小票</span>
+                    </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input type="radio" name="term" className="mr-2" />
+                      <span className="text-sm">按活动周期</span>
+                    </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input type="radio" name="term" className="mr-2" />
+                      <span className="text-sm">按店员/门店/区域销售</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-orange-50 border border-orange-100 rounded px-3 py-2 flex items-center space-x-2">
+                <Info size={14} className="text-orange-400" />
+                <span className="text-xs text-orange-600">
+                  {isTiered 
+                    ? "阶梯将按照活动周期内该连锁所有活动门店的销售数量累计计算；示例：当活动周期内品种累计销量达到阶梯时，对应的店员、店长、片区经理，均可获得对应激励。"
+                    : "单张小票销售数量2件，店员每件奖励5元，奖励共10元。"}
+                </span>
+              </div>
+
+              {/* Table for Rewards */}
+              <div className="border border-gray-200 rounded overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr className="text-gray-500 font-medium">
+                      <th className="px-4 py-3 text-left w-64">{isTiered ? "销售件数" : "销售件数"}</th>
+                      <th className="px-4 py-3 text-left"><span className="text-red-500">*</span> 店员每件激励</th>
+                      <th className="px-4 py-3 text-left">店长每件激励</th>
+                      <th className="px-4 py-3 text-left">区域经理每件激励</th>
+                      <th className="px-4 py-3 text-left">连锁抽佣每件激励</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    <tr className="hover:bg-gray-50">
+                      <td className="px-4 py-4">
+                        {isTiered ? (
+                          <div className="flex items-center space-x-2">
+                            <span>销售</span>
+                            <input type="text" className="w-16 border rounded px-2 py-1 outline-none focus:border-blue-400" defaultValue="1" />
+                            <span>件至</span>
+                            <input type="text" className="w-16 border rounded px-2 py-1 outline-none focus:border-blue-400" defaultValue="3" />
+                            <span>件</span>
+                          </div>
+                        ) : (
+                          <span>每销售1件</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center border border-gray-300 rounded px-2 py-1 w-32 focus-within:border-blue-400 transition-colors">
+                          <input type="text" placeholder="请输入" className="w-full outline-none" />
+                          <span className="text-gray-400 ml-1">元</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center border border-gray-300 rounded px-2 py-1 w-32">
+                          <input type="text" placeholder="请输入" className="w-full outline-none" />
+                          <span className="text-gray-400 ml-1">元</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center border border-gray-300 rounded px-2 py-1 w-32">
+                          <input type="text" placeholder="请输入" className="w-full outline-none" />
+                          <span className="text-gray-400 ml-1">元</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center border border-gray-300 rounded px-2 py-1 w-32">
+                          <input type="text" placeholder="请输入" className="w-full outline-none" />
+                          <span className="text-gray-400 ml-1">元</span>
+                        </div>
+                      </td>
+                    </tr>
+                    {isTiered && (
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-4 py-4" colSpan={5}>
+                          <button className="text-blue-600 flex items-center text-xs hover:underline">
+                            <Plus size={14} className="mr-1" /> 添加阶梯
+                          </button>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="text-[10px] text-red-400">注：店员角色激励必填，其他角色可不填写</div>
+
+              {/* Incentive Threshold Section */}
+              <div className="space-y-4">
+                <div className="flex items-start space-x-6">
+                  <span className="text-sm text-gray-600 w-24 pt-1">激励门槛</span>
+                  <div className="flex-1 space-y-4">
+                    <p className="text-[10px] text-gray-400">
+                      商品实际销售单价低于XX元或小于标价XX%则不发放激励，无门槛则不设置，配置最大值，商品实际销售单价高于XX元或高于标价XX%则不发放激励。
+                    </p>
+                    
+                    <div className="space-y-4">
+                      {/* Original Options */}
+                      <div className="flex items-center space-x-4">
+                        <input 
+                          type="radio" 
+                          name="threshold" 
+                          checked={thresholdType === 'range'} 
+                          onChange={() => setThresholdType('range')} 
+                        />
+                        <div className={`flex items-center space-x-2 ${thresholdType !== 'range' && 'opacity-50'}`}>
+                          <input type="text" className="w-20 border rounded px-2 py-1 text-sm outline-none" disabled={thresholdType !== 'range'} />
+                          <span className="text-sm text-gray-500">元 ≤ 实付销售金额 ≤</span>
+                          <input type="text" className="w-20 border rounded px-2 py-1 text-sm outline-none" disabled={thresholdType !== 'range'} />
+                          <span className="text-sm text-gray-500">元，发放激励。</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-4">
+                        <input 
+                          type="radio" 
+                          name="threshold" 
+                          checked={thresholdType === 'ratio'} 
+                          onChange={() => setThresholdType('ratio')} 
+                        />
+                        <div className={`flex items-center space-x-2 ${thresholdType !== 'ratio' && 'opacity-50'}`}>
+                          <span className="text-sm text-gray-500">标价</span>
+                          <input type="text" className="w-16 border rounded px-2 py-1 text-sm outline-none" disabled={thresholdType !== 'ratio'} />
+                          <span className="text-sm text-gray-500">% ≤ 实付销售金额 ≤ 标价</span>
+                          <input type="text" className="w-16 border rounded px-2 py-1 text-sm outline-none" disabled={thresholdType !== 'ratio'} />
+                          <span className="text-sm text-gray-500">%，发放激励。</span>
+                        </div>
+                      </div>
+
+                      {/* NEW OPTION: 毛利率 */}
+                      <div className="flex items-center space-x-4">
+                        <input 
+                          type="radio" 
+                          name="threshold" 
+                          checked={thresholdType === 'margin'} 
+                          onChange={() => setThresholdType('margin')} 
+                        />
+                        <div className={`flex items-center space-x-2 ${thresholdType !== 'margin' && 'opacity-50'}`}>
+                          <span className="text-sm text-gray-500 font-bold text-blue-600">毛利率 ≥</span>
+                          <div className="flex items-center border border-gray-300 rounded px-2 py-1 w-24 bg-white focus-within:border-blue-400">
+                            <input 
+                              type="text" 
+                              value={marginThreshold}
+                              onChange={(e) => setMarginThreshold(e.target.value)}
+                              className="w-full text-sm outline-none" 
+                              disabled={thresholdType !== 'margin'}
+                            />
+                            <span className="text-gray-400 ml-1 text-xs">%</span>
+                          </div>
+                          <span className="text-sm text-gray-500">，发放激励。</span>
+                          <span className="text-[10px] text-gray-400 italic ml-2">(毛利率 = (实价 - 进价) / 实价 × 100%)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end space-x-4">
+          <button 
+            onClick={onClose}
+            className="px-8 py-2 border border-gray-300 rounded text-sm text-gray-600 hover:bg-white"
+          >
+            取消
+          </button>
+          <button 
+            onClick={onClose} // Just close for now
+            className="px-8 py-2 bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700"
+          >
+            确定
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function CreateActivityView({ onBack }: { onBack: () => void }) {
   const [step, setStep] = useState(1);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [policies, setPolicies] = useState<any[]>([]);
 
   const steps = ['创建活动信息', '配置激励政策', '活动商品', '活动门店'];
 
@@ -5493,7 +7304,12 @@ function CreateActivityView({ onBack }: { onBack: () => void }) {
 
           <div className="flex justify-between items-center mb-4">
             <div className="flex space-x-2">
-              <button className="text-blue-600 text-sm flex items-center"><Plus size={16} className="mr-1" /> 添加商品</button>
+              <button 
+                onClick={() => setShowPolicyModal(true)}
+                className="text-blue-600 text-sm flex items-center"
+              >
+                <Plus size={16} className="mr-1" /> 添加商品
+              </button>
               <button className="text-gray-600 text-sm">批量删除</button>
               <button className="text-gray-600 text-sm">导入商品</button>
               <button className="text-gray-600 text-sm">导出</button>
@@ -5517,11 +7333,49 @@ function CreateActivityView({ onBack }: { onBack: () => void }) {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan={5} className="p-8 text-center text-gray-400">暂无数据</td>
-              </tr>
+              {policies.length > 0 ? policies.map((p, idx) => (
+                <tr key={idx}>
+                  <td className="p-3 border border-gray-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded flex-shrink-0" />
+                      <div>
+                        <div className="font-bold text-gray-800">示例商品 {idx + 1}</div>
+                        <div className="text-xs text-gray-400">编码: SKU00{idx + 1}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-3 border border-gray-200">
+                    <div className="text-xs space-y-1">
+                      <div>激励计算: 按商品数量</div>
+                      <div>门槛: 毛利率 ≥ 30%</div>
+                      <div>奖励: 店员 5元/件</div>
+                    </div>
+                  </td>
+                  <td className="p-3 border border-gray-200 text-xs text-gray-500">2026-05-13 10:00:00</td>
+                  <td className="p-3 border border-gray-200 text-xs text-blue-600 cursor-pointer hover:underline">查看政策</td>
+                  <td className="p-3 border border-gray-200">
+                    <button className="text-blue-600 text-xs mr-2">编辑</button>
+                    <button className="text-red-500 text-xs">删除</button>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-gray-400">暂无数据</td>
+                </tr>
+              )}
             </tbody>
           </table>
+
+          {showPolicyModal && (
+            <SingleProductIncentiveModal 
+              onClose={() => setShowPolicyModal(false)}
+              onSave={(policy) => {
+                setPolicies([...policies, policy]);
+                setShowPolicyModal(false);
+              }}
+            />
+          )}
+
           <div className="mt-8 flex justify-end space-x-4">
             <button onClick={() => setStep(1)} className="px-6 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">上一步</button>
             <button onClick={() => setStep(3)} className="px-6 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">下一步</button>
@@ -5939,10 +7793,11 @@ export default function App() {
   const [searchType, setSearchType] = useState<IncentiveType | ''>('');
   const [participationFilter, setParticipationFilter] = useState<ParticipationStatus>('待参与');
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
-  const [rewardDetailFilters, setRewardDetailFilters] = useState<{ startDate: string, endDate: string, rewardType: string }>({
+  const [rewardDetailFilters, setRewardDetailFilters] = useState<{ startDate: string, endDate: string, rewardType: string, erpOrderCode?: string }>({
     startDate: '',
     endDate: '',
-    rewardType: ''
+    rewardType: '',
+    erpOrderCode: ''
   });
 
   React.useEffect(() => {
@@ -6144,7 +7999,25 @@ export default function App() {
                 setRewardDetailFilters(filters);
                 setActiveSubItem('奖励发放明细');
               }}
+              onNavigateToRobotGroups={() => {
+                setActiveSidebar('四季蝉');
+                setExpandedSubmenu('机器人管理');
+                setActiveSubItem('群聊管理');
+              }}
+              onNavigateToRobotPrivate={() => {
+                setActiveSidebar('四季蝉');
+                setExpandedSubmenu('机器人管理');
+                setActiveSubItem('私聊管理');
+              }}
+              onNavigateToRewardWithOrder={(orderCode) => {
+                setRewardDetailFilters(prev => ({ ...prev, erpOrderCode: orderCode }));
+                setActiveSubItem('奖励发放明细');
+              }}
             />
+          ) : activeSubItem === '私聊管理' ? (
+            <PrivateChatManagementView />
+          ) : activeSubItem === '群聊管理' ? (
+            <GroupChatManagementView />
           ) : activeSubItem === '我的活动' ? (
             selectedActivityId ? (
               <ActivityDetailView id={selectedActivityId} onBack={() => setSelectedActivityId(null)} />
@@ -6153,6 +8026,12 @@ export default function App() {
             )
           ) : activeSubItem === '创建活动' ? (
             <CreateActivityView onBack={() => setActiveSubItem('我的活动')} />
+          ) : activeSubItem === '晒单管理' ? (
+            <OrderSharingManagementView />
+          ) : activeSubItem === '评论管理' ? (
+            <CommentManagementView />
+          ) : activeSubItem === '奖励明细' ? (
+            <ClerkCircleRewardDetailView />
           ) : activeSubItem === '奖励发放明细' ? (
             <div className="p-6 bg-white min-h-full">
               <div className="flex items-center justify-between mb-6">
@@ -6167,6 +8046,20 @@ export default function App() {
                     <button 
                       onClick={() => setRewardDetailFilters({ startDate: '', endDate: '', rewardType: '' })}
                       className="ml-3 text-blue-400 hover:text-blue-600 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+                {rewardDetailFilters.erpOrderCode && (
+                  <div className="flex items-center bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100 ml-2">
+                    <ClipboardList size={14} className="text-orange-600 mr-2" />
+                    <span className="text-xs text-orange-700">
+                      筛选订单号: {rewardDetailFilters.erpOrderCode}
+                    </span>
+                    <button 
+                      onClick={() => setRewardDetailFilters(prev => ({ ...prev, erpOrderCode: '' }))}
+                      className="ml-3 text-orange-400 hover:text-orange-600 transition-colors"
                     >
                       <X size={14} />
                     </button>
@@ -6188,7 +8081,13 @@ export default function App() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <label className="text-gray-600 w-20 text-right">ERP订单号</label>
-                  <input type="text" placeholder="ERP订单号" className="border border-gray-300 rounded px-2 py-1.5 flex-1" />
+                  <input 
+                    type="text" 
+                    placeholder="ERP订单号" 
+                    value={rewardDetailFilters.erpOrderCode || ""}
+                    onChange={(e) => setRewardDetailFilters(prev => ({ ...prev, erpOrderCode: e.target.value }))}
+                    className="border border-gray-300 rounded px-2 py-1.5 flex-1" 
+                  />
                 </div>
                 <div className="flex items-center space-x-2">
                   <label className="text-gray-600 w-20 text-right">商品编码</label>
@@ -6458,6 +8357,8 @@ export default function App() {
                 <span className="text-gray-600">页</span>
               </div>
             </div>
+          ) : activeSubItem === '目标管理' ? (
+            <TargetManagementView />
           ) : activeSubItem === '带金单品' ? (
             <GoldenSingleProductView />
           ) : activeSubItem === '业务设置' ? (
