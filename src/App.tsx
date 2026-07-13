@@ -7013,6 +7013,168 @@ const EmployeeUsageView = () => {
   );
 };
 
+const ManufacturerDimensionView = () => {
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  
+  const manufacturers = [
+    { code: 'MFR001', name: '阿斯利康制药', startTime: '2026-01-01', endTime: '2026-12-31', varieties: 12, momChange: 15230, momRate: 15.2, yoyChange: 24500, yoyRate: 25.4 },
+    { code: 'MFR002', name: '辉瑞投资', startTime: '2026-02-15', endTime: '2026-08-15', varieties: 8, momChange: -5420, momRate: -8.5, yoyChange: 12000, yoyRate: 12.1 },
+    { code: 'MFR003', name: '赛诺菲(中国)', startTime: '2026-03-01', endTime: '2026-09-30', varieties: 15, momChange: 8900, momRate: 10.2, yoyChange: -3200, yoyRate: -4.5 },
+    { code: 'MFR004', name: '葛兰素史克', startTime: '2026-01-01', endTime: '2026-06-30', varieties: 6, momChange: 1240, momRate: 2.1, yoyChange: 5600, yoyRate: 8.9 },
+    { code: 'MFR005', name: '礼来(中国)', startTime: '2026-04-01', endTime: '2026-12-31', varieties: 10, momChange: 0, momRate: 0, yoyChange: 0, yoyRate: 0 },
+  ];
+
+  const metrics = [
+    { label: '参与活动厂家数', value: 125, trend: '环比: 5% / 同比: 12%', detail: '厂家明细' },
+    { label: '活动品种总数', value: 856, trend: '环比: 8% / 同比: 15%', detail: '品种明细' },
+    { label: '正增长厂家数', value: 92, trend: '占比: 73.6%', detail: '正增长厂家' },
+    { label: '负增长厂家数', value: 33, trend: '占比: 26.4%', detail: '负增长厂家' },
+  ];
+
+  const handleMetricClick = (metric: any) => {
+    setModalTitle(metric.detail);
+    setShowDetailModal(true);
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-4 space-y-4 bg-gray-50 min-h-full"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-lg font-bold text-gray-800">3.1 厂家活动品种维度 — 核心报表</h2>
+        <div className="text-xs text-gray-400">数据更新时间: 2026-03-26 23:28</div>
+      </div>
+
+      {/* Metrics Dashboard */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {metrics.map((metric, idx) => (
+          <div 
+            key={idx} 
+            onClick={() => handleMetricClick(metric)}
+            className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow group"
+          >
+            <div className="text-sm text-gray-500 mb-1 flex justify-between items-center">
+              {metric.label}
+              <ArrowUpDown size={14} className="text-gray-300 group-hover:text-blue-500" />
+            </div>
+            <div className="text-2xl font-bold text-gray-800 mb-1">{metric.value}</div>
+            <div className="text-[10px] text-gray-400">{metric.trend}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Main Table */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+          <h3 className="font-bold text-gray-800 text-sm">核心报表</h3>
+          <button className="text-blue-600 text-xs hover:underline flex items-center">
+            <Download size={14} className="mr-1" /> 导出报表
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-gray-50 text-gray-500 font-medium">
+              <tr>
+                <th className="px-4 py-3">厂家编码</th>
+                <th className="px-4 py-3">厂家名称</th>
+                <th className="px-4 py-3">活动开始时间</th>
+                <th className="px-4 py-3">活动结束时间</th>
+                <th className="px-4 py-3 text-center">活动品种</th>
+                <th className="px-4 py-3 text-right">销售环比变化</th>
+                <th className="px-4 py-3 text-right">环比增长率</th>
+                <th className="px-4 py-3 text-right">销售同比变化</th>
+                <th className="px-4 py-3 text-right">同比增长率</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {manufacturers.map((mfr, idx) => (
+                <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3 text-gray-400">{mfr.code}</td>
+                  <td className="px-4 py-3 font-medium text-gray-800">{mfr.name}</td>
+                  <td className="px-4 py-3 text-gray-500">{mfr.startTime}</td>
+                  <td className="px-4 py-3 text-gray-500">{mfr.endTime}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{mfr.varieties}</span>
+                  </td>
+                  <td className={`px-4 py-3 text-right ${mfr.momChange >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {mfr.momChange >= 0 ? '+' : ''}{mfr.momChange.toLocaleString()}
+                  </td>
+                  <td className={`px-4 py-3 text-right ${mfr.momRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {mfr.momRate >= 0 ? '+' : ''}{mfr.momRate}%
+                  </td>
+                  <td className={`px-4 py-3 text-right ${mfr.yoyChange >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {mfr.yoyChange >= 0 ? '+' : ''}{mfr.yoyChange.toLocaleString()}
+                  </td>
+                  <td className={`px-4 py-3 text-right ${mfr.yoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {mfr.yoyRate >= 0 ? '+' : ''}{mfr.yoyRate}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Detail Modal */}
+      {showDetailModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[85vh] flex flex-col"
+          >
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
+              <h3 className="text-lg font-bold text-gray-800">{modalTitle}</h3>
+              <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
+               <table className="w-full text-left text-xs border border-gray-100 rounded-lg">
+                <thead className="bg-gray-50 text-gray-500 font-medium">
+                  <tr>
+                    <th className="px-4 py-3 border-b">厂家编码</th>
+                    <th className="px-4 py-3 border-b">厂家名称</th>
+                    <th className="px-4 py-3 border-b text-center">活动品种</th>
+                    <th className="px-4 py-3 border-b text-right">环比增长率</th>
+                    <th className="px-4 py-3 border-b text-right">同比增长率</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {manufacturers.slice(0, 8).map((mfr, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 text-gray-400">{mfr.code}</td>
+                      <td className="px-4 py-3 font-medium text-gray-800">{mfr.name}</td>
+                      <td className="px-4 py-3 text-center">{mfr.varieties}</td>
+                      <td className={`px-4 py-3 text-right ${mfr.momRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        {mfr.momRate}%
+                      </td>
+                      <td className={`px-4 py-3 text-right ${mfr.yoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        {mfr.yoyRate}%
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end bg-gray-50 rounded-b-xl">
+              <button 
+                onClick={() => setShowDetailModal(false)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              >
+                关闭
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 const HomeView = ({ 
   onActivityClick,
   onNavigate,
@@ -7049,6 +7211,7 @@ const HomeView = ({
         <TabItem label="机器人普及" active={activeTab === '机器人普及'} onClick={() => setActiveTab('机器人普及')} />
         <TabItem label="店员圈互动" active={activeTab === '店员圈互动'} onClick={() => setActiveTab('店员圈互动')} />
         <TabItem label="员工使用情况" active={activeTab === '员工使用情况'} onClick={() => setActiveTab('员工使用情况')} />
+        <TabItem label="厂家维度" active={activeTab === '厂家维度'} onClick={() => setActiveTab('厂家维度')} />
       </div>
 
       <div className="bg-gray-50 px-4 pt-4">
@@ -7091,6 +7254,7 @@ const HomeView = ({
            />
          ) :
          activeTab === '员工使用情况' ? <EmployeeUsageView /> :
+         activeTab === '厂家维度' ? <ManufacturerDimensionView /> :
          <IncentiveDistributionView />}
       </div>
     </div>
