@@ -51,9 +51,12 @@ import {
   Share2,
   MessageSquare,
   ShieldCheck,
+  AlertTriangle,
   Wallet,
   LogIn,
-  ArrowUpDown
+  ArrowUpDown,
+  Trash2,
+  LayoutDashboard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -2875,123 +2878,391 @@ const ClerkCircleRewardDetailView = () => {
           </div>
           
           <div className="flex items-center space-x-3 col-span-1 lg:col-span-3">
-            <button className="bg-blue-600 text-white px-6 py-1.5 rounded text-xs hover:bg-blue-700 transition-colors">查询</button>
-            <button className="bg-white border border-gray-300 text-gray-600 px-6 py-1.5 rounded text-xs hover:bg-gray-50 transition-colors">重置</button>
-            <div className="relative">
-              <button className="flex items-center space-x-1 border border-blue-200 text-blue-600 px-3 py-1.5 rounded text-xs bg-blue-50 hover:bg-blue-100 transition-all">
-                <span>导出</span>
-                <ChevronDown size={14} />
-              </button>
-            </div>
+            <button className="bg-blue-600 text-white px-6 py-1.5 rounded text-xs font-medium hover:bg-blue-700 transition-colors">查询</button>
+            <button className="border border-gray-200 text-gray-600 px-6 py-1.5 rounded text-xs font-medium hover:bg-gray-50 transition-colors">重置</button>
           </div>
-        </div>
-        
-        <div className="mt-4 text-[12px] font-bold text-gray-800">
-          累计打赏金额: 65.9元
         </div>
       </div>
+    </div>
+  );
+};
 
-      {/* Main Content Area */}
-      <div className="flex-1 p-4 overflow-hidden flex flex-col">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col flex-1 overflow-hidden">
-          {/* Table */}
-          <div className="flex-1 overflow-auto no-scrollbar">
-            <table className="w-full text-left text-[12px] border-collapse sticky top-0 bg-white">
-              <thead className="bg-[#f8fafc] text-gray-500 font-medium z-10 sticky top-0 shadow-sm border-b border-gray-100">
+const TargetProductIncentiveModal = ({ onClose, onSave }: { onClose: () => void, onSave: (data: any) => void }) => {
+  const [configMode, setConfigMode] = useState<'uniform' | 'custom'>('uniform');
+  const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
+  const [uniformTiers, setUniformTiers] = useState([
+    { id: '1', name: '超额达成目标1', excessRate: 0, rewardType: 'percentage' }
+  ]);
+
+  // Custom configuration groups
+  const [employeeGroups, setEmployeeGroups] = useState([
+    { 
+      id: 'group1', 
+      name: '默认店员组', 
+      members: ['店员 1', '店员 2'],
+      tiers: [{ id: 't1', name: '超额达成目标1' }]
+    }
+  ]);
+
+  const [storeGroups, setStoreGroups] = useState([
+    {
+      id: 'store_group1',
+      name: '默认门店组',
+      members: ['旗舰店', '分店 1'],
+      tiers: [{ id: 'st1', name: '超额达成目标1' }]
+    }
+  ]);
+
+  const [chainGroups, setChainGroups] = useState([
+    {
+      id: 'chain_group1',
+      name: '连锁管理激励组',
+      tiers: [{ id: 'ct1', name: '超额达成目标1' }]
+    }
+  ]);
+
+  // Validation Simulation
+  const coverageStatus = {
+    missingEmployees: 3,
+    duplicateEmployees: 0,
+    missingStores: 5,
+    totalEmployeesInTarget: 125,
+    totalStoresInTarget: 22
+  };
+
+  const renderIncentiveTable = (type: 'uniform' | 'group', tiersData: any[], configType: 'all' | 'employee' | 'store' | 'chain' = 'all') => {
+    const showEmployee = configType === 'all' || configType === 'employee';
+    const showStoreManager = configType === 'all' || configType === 'store';
+    const showRegionManager = configType === 'all' || configType === 'store';
+    const showManagement = configType === 'all' || configType === 'chain';
+
+    const colCount = [showEmployee, showStoreManager, showRegionManager, showManagement].filter(Boolean).length;
+
+    return (
+      <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
+        <table className="w-full border-collapse text-[12px]">
+          <thead className="bg-[#f8fafc] text-gray-600 font-medium">
+            <tr>
+              <th className="px-4 py-3 border-b border-r border-gray-200 w-24">达成条件</th>
+              <th className="px-4 py-3 border-b border-r border-gray-200 w-24">发放方式</th>
+              {showEmployee && <th className="px-4 py-3 border-b border-r border-gray-200 text-center">店员激励</th>}
+              {showStoreManager && <th className="px-4 py-3 border-b border-r border-gray-200 text-center">店长激励</th>}
+              {showRegionManager && <th className="px-4 py-3 border-b border-r border-gray-200 text-center">区域经理激励</th>}
+              {showManagement && <th className="px-4 py-3 border-b border-gray-200 text-center">管理激励</th>}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="px-4 py-4 border-b border-r border-gray-200 bg-gray-50 font-medium">未完成目标</td>
+              <td className="px-4 py-4 border-b border-r border-gray-200 text-center">按单件</td>
+              {[...Array(colCount)].map((_, i) => (
+                <td key={i} className={`px-4 py-4 border-b border-gray-200 ${i < colCount - 1 ? 'border-r' : ''}`}>
+                  <div className="flex items-center justify-center space-x-2">
+                    <input type="text" placeholder="请输入" className="w-20 border border-gray-200 rounded px-2 py-1 outline-none text-center" />
+                    <span className="text-gray-400">元/件</span>
+                  </div>
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td rowSpan={2} className="px-4 py-4 border-b border-r border-gray-200 bg-gray-50 font-medium">达成目标后</td>
+              <td className="px-4 py-4 border-b border-r border-gray-200 text-center">按单件</td>
+              {[...Array(colCount)].map((_, i) => (
+                <td key={i} className={`px-4 py-4 border-b border-gray-200 ${i < colCount - 1 ? 'border-r' : ''}`}>
+                  <div className="flex items-center justify-center space-x-2">
+                    <input type="text" placeholder="请输入" className="w-20 border border-gray-200 rounded px-2 py-1 outline-none text-center" />
+                    <span className="text-gray-400">元/件</span>
+                  </div>
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td className="px-4 py-4 border-b border-r border-gray-200 text-center relative group">
+                达成补发
+                <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-orange-400 text-white flex items-center justify-center text-[10px] cursor-help">!</div>
+              </td>
+              {[...Array(colCount)].map((_, i) => (
+                <td key={i} className={`px-4 py-4 border-b border-gray-200 ${i < colCount - 1 ? 'border-r' : ''}`}>
+                  <div className="flex items-center justify-center space-x-2">
+                    <input type="text" className="w-16 border border-gray-200 rounded px-2 py-1 outline-none text-center" />
+                    <span className="text-gray-400">元/件 或 固定</span>
+                    <input type="text" className="w-16 border border-gray-200 rounded px-2 py-1 outline-none text-center" />
+                    <span className="text-gray-400">元</span>
+                  </div>
+                </td>
+              ))}
+            </tr>
+            {tiersData.map((tier) => (
+              <React.Fragment key={tier.id}>
                 <tr>
-                  <th className="px-4 py-3 font-medium whitespace-nowrap">打赏编号</th>
-                  <th className="px-4 py-3 font-medium whitespace-nowrap">工业名称</th>
-                  <th className="px-4 py-3 font-medium whitespace-nowrap">打赏人</th>
-                  <th className="px-4 py-3 font-medium whitespace-nowrap text-center">打赏金额</th>
-                  <th className="px-4 py-3 font-medium whitespace-nowrap">激励发放时间</th>
-                  <th className="px-4 py-3 font-medium whitespace-nowrap">晒单员工</th>
-                  <th className="px-4 py-3 font-medium whitespace-nowrap">所属企业</th>
-                  <th className="px-4 py-3 font-medium whitespace-nowrap">所属片区</th>
-                  <th className="px-4 py-3 font-medium whitespace-nowrap">订单编号</th>
-                  <th className="px-4 py-3 font-medium whitespace-nowrap">商品名称/编码</th>
-                  <th className="px-4 py-3 font-medium whitespace-nowrap text-center">晒单内容</th>
+                  <td rowSpan={2} className="px-4 py-4 border-b border-r border-gray-200 bg-gray-50 font-medium">{tier.name}</td>
+                  <td className="px-4 py-4 border-b border-r border-gray-200 text-center">按单件</td>
+                  {[...Array(colCount)].map((_, i) => (
+                    <td key={i} className={`px-4 py-4 border-b border-gray-200 ${i < colCount - 1 ? 'border-r' : ''}`}>
+                      <div className="flex items-center justify-center space-x-2">
+                        <span className="text-gray-400">超过</span>
+                        <input type="text" className="w-12 border border-gray-200 rounded px-1 py-1 outline-none text-center" />
+                        <select className="bg-transparent text-gray-500 outline-none"><option>%</option></select>
+                        <input type="text" className="w-16 border border-gray-200 rounded px-2 py-1 outline-none text-center" />
+                        <span className="text-gray-400">元/件</span>
+                      </div>
+                    </td>
+                  ))}
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 text-gray-600">
-                {Array(10).fill(mockData[0]).concat(mockData[1]).map((item, idx) => (
-                  <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
-                    <td className="px-4 py-4 font-mono text-gray-500 whitespace-nowrap">{item.id}</td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div>{item.industrialName}</div>
-                      <div className="text-[10px] text-gray-400">{item.industrialCode}</div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-1">
-                        <span>{item.tipper}</span>
-                        <Eye size={12} className="text-gray-300 cursor-pointer hover:text-blue-400" />
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-center font-bold text-gray-700">{item.rewardAmount}</td>
-                    <td className="px-4 py-4 whitespace-nowrap text-gray-500">
-                       {item.issueTime}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0 overflow-hidden">
-                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${item.clerk.id}`} alt="avatar" />
+                <tr>
+                  <td className="px-4 py-4 border-b border-r border-gray-200 text-center relative">
+                    达成补发
+                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-orange-400 text-white flex items-center justify-center text-[10px] cursor-help">!</div>
+                  </td>
+                  {[...Array(colCount)].map((_, i) => (
+                    <td key={i} className={`px-4 py-4 border-b border-gray-200 ${i < colCount - 1 ? 'border-r' : ''}`}>
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex items-center justify-center space-x-1">
+                          <span className="text-gray-400">超过</span>
+                          <input type="text" className="w-12 border border-gray-200 rounded px-1 py-1 outline-none text-center" />
+                          <select className="bg-transparent text-gray-500 outline-none"><option>%</option></select>
+                          <span className="text-gray-400">补</span>
+                          <input type="text" className="w-16 border border-gray-200 rounded px-2 py-1 outline-none text-center" />
+                          <span className="text-gray-400 text-[10px]">元/件 或</span>
                         </div>
-                        <div className="flex flex-col">
-                          <div className="flex items-center space-x-1">
-                            <span className="font-bold text-gray-700">{item.clerk.name}</span>
-                            <Eye size={12} className="text-gray-300 cursor-pointer hover:text-blue-400" />
-                          </div>
-                          <span className="text-[10px] text-gray-400">员工编码: {item.clerk.id}</span>
-                          <span className="text-[10px] text-gray-400 text-ellipsis max-w-[120px] overflow-hidden whitespace-nowrap">所属机构: {item.clerk.org}</span>
+                        <div className="flex items-center justify-center space-x-1">
+                          <span className="text-gray-400">固定</span>
+                          <input type="text" className="w-16 border border-gray-200 rounded px-2 py-1 outline-none text-center" />
+                          <span className="text-gray-400">元</span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      {item.enterprise}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div>{item.district}</div>
-                      <div className="text-[10px] text-gray-400">{item.districtCode}</div>
-                    </td>
-                    <td className="px-4 py-4 font-mono text-gray-500 whitespace-nowrap">{item.orderId}</td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="max-w-[150px] truncate" title={item.productName}>{item.productName}</div>
-                      <div className="text-[10px] text-gray-400">{item.productCode}</div>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <button className="text-blue-600 hover:underline">查看</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tr>
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+        <div className="p-4 bg-white border-t border-gray-100">
+          <button 
+            onClick={() => {
+              if (type === 'uniform') {
+                setUniformTiers([...tiersData, { id: Date.now().toString(), name: `超额达成目标${tiersData.length + 1}` }]);
+              } else if (configType === 'employee') {
+                 setEmployeeGroups(employeeGroups.map(g => g.id === tiersData[0]?.id?.split('-')[0] ? {...g, tiers: [...g.tiers, { id: Date.now().toString(), name: `超额达成目标${g.tiers.length + 1}` }]} : g));
+              }
+            }}
+            className="text-blue-600 flex items-center space-x-1 hover:underline"
+          >
+            <Plus size={16} />
+            <span>添加阶梯</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
 
-          {/* Pagination */}
-          <div className="p-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 bg-white">
-            <span className="text-gray-400">共 27 条</span>
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-1">
-                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed" disabled>
-                  <ChevronLeft size={14} />
-                </button>
-                <button className="w-6 h-6 bg-blue-600 text-white rounded font-medium">1</button>
-                <button className="w-6 h-6 border border-gray-200 text-gray-600 rounded hover:bg-gray-50">2</button>
-                <button className="w-6 h-6 border border-gray-200 text-gray-600 rounded hover:bg-gray-50">3</button>
-                <button className="p-1 border border-gray-200 rounded hover:bg-gray-50">
-                  <ChevronRight size={14} />
-                </button>
+  return (
+    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 className="text-lg font-bold text-gray-800">新增目标单品激励政策</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
+          {/* Section 1: Selection */}
+          <section>
+            <div className="flex items-center space-x-2 mb-4">
+              <span className="text-sm font-bold text-gray-800">激励商品</span>
+              <span className="text-xs text-gray-400 font-normal">可选择多个商品批量设置激励</span>
+            </div>
+            <div className="bg-gray-50 border border-gray-100 rounded-lg p-8 flex items-center justify-center">
+              <button className="text-blue-600 flex items-center space-x-2 hover:underline font-medium">
+                <Plus size={18} />
+                <span>从目标库选择激励商品</span>
+              </button>
+            </div>
+          </section>
+
+          {/* Configuration Options */}
+          <section className="border-t border-gray-100 pt-6">
+             <div className="flex items-center space-x-8 mb-6">
+                <span className="text-sm font-bold text-gray-800">配置选项</span>
+                <div className="flex items-center space-x-6">
+                  <label className="flex items-center cursor-pointer group">
+                    <div className={`w-4 h-4 rounded-full border ${configMode === 'uniform' ? 'border-blue-600' : 'border-gray-300'} flex items-center justify-center mr-2`}>
+                      {configMode === 'uniform' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                    </div>
+                    <input type="radio" className="hidden" checked={configMode === 'uniform'} onChange={() => setConfigMode('uniform')} />
+                    <span className="text-sm text-gray-700">统一配置</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer group">
+                    <div className={`w-4 h-4 rounded-full border ${configMode === 'custom' ? 'border-blue-600' : 'border-gray-300'} flex items-center justify-center mr-2`}>
+                      {configMode === 'custom' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                    </div>
+                    <input type="radio" className="hidden" checked={configMode === 'custom'} onChange={() => setConfigMode('custom')} />
+                    <span className="text-sm text-gray-700">自定义配置</span>
+                  </label>
+                </div>
+             </div>
+
+             {/* Validation Alert (Custom Mode Only) */}
+             {configMode === 'custom' && (coverageStatus.missingEmployees > 0 || coverageStatus.missingStores > 0) && (
+               <div className="mb-6 bg-red-50 border border-red-100 rounded-lg p-4 flex items-start space-x-3">
+                 <AlertTriangle size={18} className="text-red-500 mt-0.5" />
+                 <div>
+                   <p className="text-sm font-bold text-red-800">配置覆盖异常提醒</p>
+                   <p className="text-xs text-red-600 mt-1">
+                     目标库中该商品关联了 <span className="font-bold underline">{coverageStatus.totalEmployeesInTarget}</span> 名员工，当前有 <span className="font-bold underline">{coverageStatus.missingEmployees}</span> 名员工未配置激励政策。
+                     关联了 <span className="font-bold underline">{coverageStatus.totalStoresInTarget}</span> 家门店，有 <span className="font-bold underline">{coverageStatus.missingStores}</span> 家门店未配置管理激励。请检查并补齐配置，以免影响激励发放。
+                   </p>
+                 </div>
+               </div>
+             )}
+
+             <div className="space-y-4">
+                <div className="flex items-start">
+                  <span className="text-sm text-gray-500 w-20 shrink-0">激励规则</span>
+                  <div className="text-xs text-gray-400 space-y-1">
+                    <p>1.按销售数量计算、店员按单个店员计算、店长按照单个门店计算、区域经理按照区域内门店计算；</p>
+                    <p>2.设置了店员目标，店员激励才有效；设置了门店目标，店长激励、区域经理激励、管理激励才有效；</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-sm text-gray-500 w-20 shrink-0">激励统计</span>
+                  <div className="flex items-center text-sm">
+                    <span className="font-bold text-gray-800">年度 0527测试</span>
+                    <button className="ml-2 text-blue-600 flex items-center hover:underline">
+                      查看 <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+                <div className="ml-20 text-[11px] text-gray-400 space-y-1">
+                  <p>目标周期：2027-01-01 00:00:00 至 2027-12-31 23:59:59</p>
+                  <p>目标类型：爆品目标 考核维度：销售量</p>
+                </div>
+             </div>
+          </section>
+
+          {configMode === 'uniform' ? (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              {renderIncentiveTable('uniform', uniformTiers)}
+            </div>
+          ) : (
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              {/* Custom Employee Groups */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-gray-800 flex items-center">
+                    <div className="w-1 h-4 bg-blue-600 rounded-full mr-2" />
+                    店员激励配置
+                  </h4>
+                  <button 
+                    onClick={() => setEmployeeGroups([...employeeGroups, { id: Date.now().toString(), name: `店员组 ${employeeGroups.length + 1}`, members: [], tiers: [{ id: 't1', name: '超额达成目标1' }] }])}
+                    className="px-3 py-1.5 bg-blue-50 text-blue-600 text-xs rounded border border-blue-100 hover:bg-blue-100 transition-colors flex items-center"
+                  >
+                    <Plus size={14} className="mr-1" /> 新增店员组
+                  </button>
+                </div>
+                
+                {employeeGroups.map((group, gIdx) => (
+                  <div key={group.id} className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <span className="text-xs font-bold text-gray-700">{group.name}</span>
+                        <div className="flex items-center text-[10px] text-blue-600 cursor-pointer hover:underline">
+                          <Users size={12} className="mr-1" />
+                          <span>已选 {group.members.length || 0} 人 (点击配置人员)</span>
+                        </div>
+                      </div>
+                      <button className="text-gray-400 hover:text-red-500"><Trash2 size={14} /></button>
+                    </div>
+                    <div className="p-4 overflow-x-auto no-scrollbar">
+                      {renderIncentiveTable('group', group.tiers, 'employee')}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <select className="border border-gray-200 rounded px-2 py-1 bg-white cursor-pointer outline-none ml-2">
-                <option>10条/页</option>
-                <option>20条/页</option>
-              </select>
-              <div className="flex items-center space-x-1">
-                <span>跳至</span>
-                <input type="text" className="w-8 border border-gray-200 rounded px-1 py-1 text-center font-bold" defaultValue="1" />
-                <span>页</span>
+
+              {/* Custom Store Groups */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-gray-800 flex items-center">
+                    <div className="w-1 h-4 bg-orange-500 rounded-full mr-2" />
+                    门店管理激励配置
+                  </h4>
+                  <button 
+                    onClick={() => setStoreGroups([...storeGroups, { id: Date.now().toString(), name: `门店组 ${storeGroups.length + 1}`, members: [], tiers: [{ id: 'st1', name: '超额达成目标1' }] }])}
+                    className="px-3 py-1.5 bg-orange-50 text-orange-600 text-xs rounded border border-orange-100 hover:bg-orange-100 transition-colors flex items-center"
+                  >
+                    <Plus size={14} className="mr-1" /> 新增门店组
+                  </button>
+                </div>
+
+                {storeGroups.map((group, gIdx) => (
+                  <div key={group.id} className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <span className="text-xs font-bold text-gray-700">{group.name}</span>
+                        <div className="flex items-center text-[10px] text-orange-600 cursor-pointer hover:underline">
+                          <LayoutDashboard size={12} className="mr-1" />
+                          <span>已选 {group.members.length || 0} 家门店 (点击配置门店)</span>
+                        </div>
+                      </div>
+                      <button className="text-gray-400 hover:text-red-500"><Trash2 size={14} /></button>
+                    </div>
+                    <div className="p-4 overflow-x-auto no-scrollbar">
+                      {renderIncentiveTable('group', group.tiers, 'store')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Custom Chain Groups */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-gray-800 flex items-center">
+                    <div className="w-1 h-4 bg-purple-600 rounded-full mr-2" />
+                    连锁管理激励配置
+                  </h4>
+                </div>
+
+                {chainGroups.map((group) => (
+                  <div key={group.id} className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                       <span className="text-xs font-bold text-gray-700">{group.name}</span>
+                    </div>
+                    <div className="p-4 overflow-x-auto no-scrollbar">
+                      {renderIncentiveTable('group', group.tiers, 'chain')}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Footer Settings */}
+          <section className="space-y-4 pt-6 border-t border-gray-100">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-500 w-20 shrink-0">补发规则</span>
+              <div className="flex items-center space-x-2 text-sm">
+                <span className="text-gray-800">按超额分段补发</span>
+                <button className="text-blue-600 hover:underline">查看案例</button>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-500 w-20 shrink-0">激励门槛</span>
+              <div className="flex items-center space-x-2">
+                <input type="checkbox" className="rounded border-gray-300" />
+                <span className="text-sm text-gray-700">商品实际销售单价小于</span>
+                <input type="text" className="w-16 border border-gray-200 rounded px-2 py-1 text-xs text-center outline-none mx-1" placeholder="请输入" />
+                <span className="text-sm text-gray-700">元，目标记录销量，不发放激励</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-100 flex justify-end space-x-4 bg-white">
+          <button onClick={onClose} className="px-8 py-2 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 transition-colors">取消</button>
+          <button onClick={() => onSave({})} className="px-8 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">确定</button>
         </div>
       </div>
     </div>
@@ -7147,241 +7418,505 @@ const SingleProductIncentiveModal = ({
 function CreateActivityView({ onBack }: { onBack: () => void }) {
   const [step, setStep] = useState(1);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [showTargetProductModal, setShowTargetProductModal] = useState(false);
   const [policies, setPolicies] = useState<any[]>([]);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    employeeIncentive: '扣连锁汇付账号',
+    serviceFee: '扣连锁汇付账号',
+    associatedIndustry: '',
+    activityTitle: '',
+    incentiveMode: '及时豆模式',
+    incentiveCalculation: '按商品数量',
+    associatedTarget: '',
+    rebateRule: '按超额分段补发',
+    rewardProtectionPeriod: 0,
+    startTime: '',
+    endTime: '',
+    activityIntro: ''
+  });
 
   const steps = ['创建活动信息', '配置激励政策', '活动商品', '活动门店'];
 
+  const handleTargetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      associatedTarget: value,
+      // When target is selected, set fixed dates
+      ...(value === '0527测试' ? {
+        startTime: '2027-01-01',
+        endTime: '2027-12-31'
+      } : {})
+    }));
+  };
+
   return (
-    <div className="p-6 bg-white min-h-full">
-      <div className="flex items-center mb-6">
-        <button onClick={onBack} className="text-gray-600 hover:text-blue-600 flex items-center mr-4">
-          <ArrowLeft size={18} className="mr-1" /> 返回
-        </button>
-        <h2 className="text-lg font-bold text-gray-800">代厂家建活动</h2>
+    <div className="p-0 bg-gray-50 min-h-full flex flex-col">
+      {showTargetProductModal && (
+        <TargetProductIncentiveModal 
+          onClose={() => setShowTargetProductModal(false)}
+          onSave={(data) => {
+            console.log('Saved incentive:', data);
+            setShowTargetProductModal(false);
+          }}
+        />
+      )}
+      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+        <div className="flex items-center">
+          <button onClick={onBack} className="text-gray-600 hover:text-blue-600 flex items-center mr-4">
+            <ChevronLeft size={18} className="mr-1" /> 返回
+          </button>
+          <div className="w-px h-4 bg-gray-300 mx-3" />
+          <h2 className="text-sm font-bold text-gray-800">{step === 2 ? '活动详情' : '代厂家建活动'}</h2>
+        </div>
       </div>
 
-      <div className="flex items-center mb-8 bg-gray-50 p-4 rounded-lg">
-        {steps.map((s, i) => (
-          <div key={s} className="flex items-center flex-1">
-            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${step > i + 1 ? 'bg-green-500 text-white' : step === i + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
-              {i + 1}
+      <div className="bg-white px-12 py-8 shadow-sm">
+        <div className="flex items-center max-w-4xl mx-auto">
+          {steps.map((s, i) => (
+            <div key={s} className="flex items-center flex-1">
+              <div className="flex flex-col items-center relative">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full text-lg z-10 ${step > i + 1 ? 'bg-blue-600 text-white' : step === i + 1 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                  {i + 1}
+                </div>
+                <span className={`mt-2 text-sm whitespace-nowrap absolute top-12 left-1/2 -translate-x-1/2 ${step === i + 1 ? 'text-gray-800 font-medium' : 'text-gray-500'}`}>{s}</span>
+              </div>
+              {i < steps.length - 1 && <div className={`flex-1 h-0.5 mx-4 -mt-6 ${step > i + 1 ? 'bg-blue-600' : 'bg-gray-200'}`} />}
             </div>
-            <span className={`ml-2 text-sm ${step === i + 1 ? 'text-blue-600 font-bold' : 'text-gray-500'}`}>{s}</span>
-            {i < steps.length - 1 && <div className="flex-1 h-px bg-gray-300 mx-4" />}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {step === 1 ? (
-        <div className="space-y-6 max-w-3xl">
-          <div className="grid grid-cols-12 gap-4 items-center">
-            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 海典服务费</label>
-            <div className="col-span-10 flex items-center space-x-4">
-              <label className="flex items-center"><input type="radio" name="serviceFee" className="mr-2" defaultChecked /> 连锁汇付账号</label>
-              <label className="flex items-center"><input type="radio" name="serviceFee" className="mr-2" /> 厂家汇账号</label>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-center">
-            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 关联工业</label>
-            <select className="col-span-10 border border-gray-300 rounded px-3 py-2 text-sm">
-              <option>请选择</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-center">
-            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 活动主题</label>
-            <div className="col-span-10 relative">
-              <input type="text" className="w-full border border-gray-300 rounded px-3 py-2 text-sm" maxLength={30} />
-              <span className="absolute right-3 top-2 text-xs text-gray-400">0/30</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-start">
-            <label className="col-span-2 text-sm text-right text-gray-600 pt-2"><span className="text-red-500">*</span> 激励模式</label>
-            <div className="col-span-10 space-y-2">
-              <label className="flex items-center"><input type="radio" name="mode" className="mr-2" defaultChecked /> 及时豆模式，即时激励，实时向店员发放销售激励 <span className="ml-2 bg-orange-100 text-orange-600 text-[10px] px-1.5 rounded">推荐</span></label>
-              <label className="flex items-center"><input type="radio" name="mode" className="mr-2" /> 延时豆模式，由连锁线下向店员结算销售激励</label>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-center">
-            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 激励计算</label>
-            <div className="col-span-10 flex items-center space-x-4">
-              <label className="flex items-center"><input type="radio" name="calc" className="mr-2" defaultChecked /> 按商品数量</label>
-              <label className="flex items-center"><input type="radio" name="calc" className="mr-2" /> 按商品金额</label>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-center">
-            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 激励发放</label>
-            <span className="col-span-10 text-sm text-gray-800">按固定金额</span>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-center">
-            <label className="col-span-2 text-sm text-right text-gray-600">关联目标</label>
-            <div className="col-span-10 flex items-center space-x-4">
-              <select className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm">
-                <option>请选择</option>
-              </select>
-              <button className="text-blue-600 text-sm">新建目标</button>
-            </div>
-          </div>
-          <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-2"></div>
-            <div className="col-span-10 bg-orange-50 text-orange-600 text-xs p-2 rounded flex items-center">
-              <Info size={14} className="mr-1" /> 仅限发布状态为【已发布】的目标活动
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-center">
-            <label className="col-span-2 text-sm text-right text-gray-600"><span className="text-red-500">*</span> 活动时间</label>
-            <div className="col-span-10 flex items-center space-x-2">
-              <input type="date" className="border border-gray-300 rounded px-3 py-2 text-sm" />
-              <span>至</span>
-              <input type="date" className="border border-gray-300 rounded px-3 py-2 text-sm" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-start">
-            <label className="col-span-2 text-sm text-right text-gray-600 pt-2">活动封面</label>
-            <div className="col-span-10">
-              <div className="w-32 h-24 border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-blue-400">
-                <Plus size={24} />
-              </div>
-              <p className="text-xs text-gray-400 mt-2">建议240*160px，格式PNG，JPG，JPEG不超过2M</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-start">
-            <label className="col-span-2 text-sm text-right text-gray-600 pt-2"><span className="text-red-500">*</span> 活动简介</label>
-            <div className="col-span-10 relative">
-              <textarea className="w-full h-24 border border-gray-300 rounded px-3 py-2 text-sm" maxLength={300}></textarea>
-              <span className="absolute right-3 bottom-2 text-xs text-gray-400">0/300</span>
-            </div>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-gray-100 flex space-x-4">
-            <button className="px-6 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">仅保存</button>
-            <button onClick={() => setStep(2)} className="px-6 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">保存并设置政策</button>
-          </div>
-        </div>
-      ) : step === 2 ? (
-        <div className="p-6">
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 flex items-start space-x-3">
-            <Info size={18} className="text-blue-600 mt-0.5 shrink-0" />
-            <div className="space-y-2">
-              <p className="text-xs text-blue-800">
-                *当同一个商品在不同活动中设置了不同的激励政策时，我们将按照以下优先级进行奖励发放（激励退还将按照此优先级反向进行）：
-              </p>
-              <div className="flex items-center space-x-2 text-[10px] text-gray-600">
-                <span>固定组合关联</span> <ChevronRight size={12} />
-                <span>高频带低频关联</span> <ChevronRight size={12} />
-                <span>高频带系列关联</span> <ChevronRight size={12} />
-                <span>系列关联-任意组合</span> <ChevronRight size={12} />
-                <span>疗程销售激励</span> <ChevronRight size={12} />
-                <span>单品销售奖励</span>
+      <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
+        {step === 1 ? (
+          <div className="bg-white rounded-lg p-12 w-full max-w-4xl shadow-sm space-y-8">
+            {/* 员工激励 */}
+            <div className="grid grid-cols-12 gap-6 items-center">
+              <label className="col-span-2 text-sm text-right text-gray-500"><span className="text-red-500 mr-1">*</span>员工激励</label>
+              <div className="col-span-10 flex items-center space-x-12">
+                <label className="flex items-center cursor-pointer group">
+                  <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center mr-2 group-hover:border-blue-500">
+                    {formData.employeeIncentive === '扣连锁汇付账号' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                  </div>
+                  <input 
+                    type="radio" 
+                    name="employeeIncentive" 
+                    className="hidden" 
+                    checked={formData.employeeIncentive === '扣连锁汇付账号'}
+                    onChange={() => setFormData({...formData, employeeIncentive: '扣连锁汇付账号'})}
+                  />
+                  <span className="text-sm text-gray-700">扣连锁汇付账号</span>
+                </label>
+                <label className="flex items-center cursor-pointer group">
+                  <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center mr-2 group-hover:border-blue-500">
+                    {formData.employeeIncentive === '扣厂家汇付账号' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                  </div>
+                  <input 
+                    type="radio" 
+                    name="employeeIncentive" 
+                    className="hidden"
+                    checked={formData.employeeIncentive === '扣厂家汇付账号'}
+                    onChange={() => setFormData({...formData, employeeIncentive: '扣厂家汇付账号'})}
+                  />
+                  <span className="text-sm text-gray-700">扣厂家汇付账号</span>
+                </label>
               </div>
             </div>
-          </div>
 
-          <div className="flex space-x-4 border-b border-gray-200 mb-6">
-            {['单品销售激励', '疗程销售激励', '关联销售激励', '销售排行激励'].map(tab => (
-              <button key={tab} className={`pb-2 text-sm ${tab === '单品销售激励' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}>
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          <div className="bg-orange-50 text-orange-600 text-xs p-3 rounded mb-4 flex items-center">
-            <Info size={14} className="mr-1" /> 注意：同一商品设置“按商品批号激励”，则不能再设置其他任何激励政策(包含单品、疗程、关联、销售排行)；
-          </div>
-
-          <div className="flex space-x-4 text-sm mb-4">
-            <button className="text-blue-600 border-b-2 border-blue-600 pb-1">按商品激励</button>
-            <button className="text-gray-600">按商品批号激励</button>
-          </div>
-
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex space-x-2">
-              <button 
-                onClick={() => setShowPolicyModal(true)}
-                className="text-blue-600 text-sm flex items-center"
-              >
-                <Plus size={16} className="mr-1" /> 添加商品
-              </button>
-              <button className="text-gray-600 text-sm">批量删除</button>
-              <button className="text-gray-600 text-sm">导入商品</button>
-              <button className="text-gray-600 text-sm">导出</button>
+            {/* 海典服务费 */}
+            <div className="grid grid-cols-12 gap-6 items-center">
+              <label className="col-span-2 text-sm text-right text-gray-500"><span className="text-red-500 mr-1">*</span>海典服务费</label>
+              <div className="col-span-10 flex items-center space-x-12">
+                <label className="flex items-center cursor-pointer group">
+                  <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center mr-2 group-hover:border-blue-500">
+                    {formData.serviceFee === '扣连锁汇付账号' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                  </div>
+                  <input 
+                    type="radio" 
+                    name="serviceFee" 
+                    className="hidden"
+                    checked={formData.serviceFee === '扣连锁汇付账号'}
+                    onChange={() => setFormData({...formData, serviceFee: '扣连锁汇付账号'})}
+                  />
+                  <span className="text-sm text-gray-700">扣连锁汇付账号</span>
+                </label>
+                <label className="flex items-center cursor-pointer group">
+                  <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center mr-2 group-hover:border-blue-500">
+                    {formData.serviceFee === '扣厂家汇付账号' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                  </div>
+                  <input 
+                    type="radio" 
+                    name="serviceFee" 
+                    className="hidden"
+                    checked={formData.serviceFee === '扣厂家汇付账号'}
+                    onChange={() => setFormData({...formData, serviceFee: '扣厂家汇付账号'})}
+                  />
+                  <span className="text-sm text-gray-700">扣厂家汇付账号</span>
+                </label>
+              </div>
             </div>
-            <div className="flex space-x-2">
-              <select className="border border-gray-300 rounded px-2 py-1 text-sm"><option>商品编码</option></select>
-              <input type="text" placeholder="请输入商品编码" className="border border-gray-300 rounded px-2 py-1 text-sm" />
-              <button className="bg-blue-600 text-white px-4 py-1 rounded text-sm">查询</button>
-              <button className="border border-gray-300 rounded px-4 py-1 text-sm">重置</button>
+
+            {/* 关联工业 */}
+            <div className="grid grid-cols-12 gap-6 items-center">
+              <label className="col-span-2 text-sm text-right text-gray-500"><span className="text-red-500 mr-1">*</span>关联工业</label>
+              <div className="col-span-6">
+                <div className="relative">
+                  <select 
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm appearance-none bg-white focus:border-blue-500 outline-none"
+                    value={formData.associatedIndustry}
+                    onChange={(e) => setFormData({...formData, associatedIndustry: e.target.value})}
+                  >
+                    <option value="">请选择</option>
+                    <option value="ind1">海典工业</option>
+                  </select>
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* 活动主题 */}
+            <div className="grid grid-cols-12 gap-6 items-center">
+              <label className="col-span-2 text-sm text-right text-gray-500"><span className="text-red-500 mr-1">*</span>活动主题</label>
+              <div className="col-span-6 relative">
+                <input 
+                  type="text" 
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-blue-500 outline-none pr-12" 
+                  maxLength={30} 
+                  placeholder="请输入"
+                  value={formData.activityTitle}
+                  onChange={(e) => setFormData({...formData, activityTitle: e.target.value})}
+                />
+                <span className="absolute right-3 top-2.5 text-xs text-gray-400">{formData.activityTitle.length}/30</span>
+              </div>
+            </div>
+
+            {/* 激励模式 */}
+            <div className="grid grid-cols-12 gap-6 items-start">
+              <label className="col-span-2 text-sm text-right text-gray-500 pt-2"><span className="text-red-500 mr-1">*</span>激励模式</label>
+              <div className="col-span-10 space-y-4">
+                <label className="flex items-center cursor-pointer group">
+                  <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center mr-2 group-hover:border-blue-500">
+                    {formData.incentiveMode === '及时豆模式' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                  </div>
+                  <input 
+                    type="radio" 
+                    name="incentiveMode" 
+                    className="hidden"
+                    checked={formData.incentiveMode === '及时豆模式'}
+                    onChange={() => setFormData({...formData, incentiveMode: '及时豆模式'})}
+                  />
+                  <div className="flex items-center">
+                    <span className="text-sm text-gray-700 mr-2">及时豆模式，即时激励，实时向店员发放销售激励</span>
+                    <span className="bg-orange-50 text-orange-500 text-[10px] px-2 py-0.5 rounded flex items-center">
+                      <ThumbsUp size={10} className="mr-1" /> 推荐
+                    </span>
+                  </div>
+                </label>
+                <label className="flex items-center cursor-pointer group">
+                  <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center mr-2 group-hover:border-blue-500">
+                    {formData.incentiveMode === '延时豆模式' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                  </div>
+                  <input 
+                    type="radio" 
+                    name="incentiveMode" 
+                    className="hidden"
+                    checked={formData.incentiveMode === '延时豆模式'}
+                    onChange={() => setFormData({...formData, incentiveMode: '延时豆模式'})}
+                  />
+                  <span className="text-sm text-gray-700">延时豆模式，由连锁线下向店员结算销售激励</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 激励计算 */}
+            <div className="grid grid-cols-12 gap-6 items-center">
+              <label className="col-span-2 text-sm text-right text-gray-500"><span className="text-red-500 mr-1">*</span>激励计算</label>
+              <div className="col-span-10 flex items-center space-x-12">
+                <label className="flex items-center cursor-pointer group">
+                  <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center mr-2 group-hover:border-blue-500">
+                    {formData.incentiveCalculation === '按商品数量' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                  </div>
+                  <input 
+                    type="radio" 
+                    name="incentiveCalculation" 
+                    className="hidden"
+                    checked={formData.incentiveCalculation === '按商品数量'}
+                    onChange={() => setFormData({...formData, incentiveCalculation: '按商品数量'})}
+                  />
+                  <span className="text-sm text-gray-700">按商品数量</span>
+                </label>
+                <label className="flex items-center cursor-pointer group">
+                  <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center mr-2 group-hover:border-blue-500">
+                    {formData.incentiveCalculation === '按商品金额' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                  </div>
+                  <input 
+                    type="radio" 
+                    name="incentiveCalculation" 
+                    className="hidden"
+                    checked={formData.incentiveCalculation === '按商品金额'}
+                    onChange={() => setFormData({...formData, incentiveCalculation: '按商品金额'})}
+                  />
+                  <span className="text-sm text-gray-700">按商品金额</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 激励发放 */}
+            <div className="grid grid-cols-12 gap-6 items-center">
+              <label className="col-span-2 text-sm text-right text-gray-500"><span className="text-red-500 mr-1">*</span>激励发放</label>
+              <div className="col-span-10 text-sm text-gray-700">按固定金额</div>
+            </div>
+
+            {/* 关联目标 */}
+            <div className="grid grid-cols-12 gap-6 items-center">
+              <label className="col-span-2 text-sm text-right text-gray-500">关联目标</label>
+              <div className="col-span-6 flex items-center space-x-4">
+                <div className="relative flex-1">
+                  <select 
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm appearance-none bg-white focus:border-blue-500 outline-none"
+                    value={formData.associatedTarget}
+                    onChange={handleTargetChange}
+                  >
+                    <option value="">请选择</option>
+                    <option value="0527测试">0527测试</option>
+                  </select>
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                </div>
+                <button className="text-blue-600 text-sm hover:underline">新建目标</button>
+              </div>
+            </div>
+            
+            {/* Target Alert */}
+            <div className="grid grid-cols-12 gap-6">
+              <div className="col-span-2" />
+              <div className="col-span-10 bg-orange-50 border border-orange-100 p-2.5 rounded flex items-center text-xs text-orange-600">
+                <div className="w-4 h-4 rounded-full border border-orange-400 flex items-center justify-center mr-2 shrink-0">!</div>
+                仅限发布状态为【已发布】的目标活动
+              </div>
+            </div>
+
+            {/* Conditionally shown fields when target is selected */}
+            {formData.associatedTarget && (
+              <>
+                {/* 补发规则 */}
+                <div className="grid grid-cols-12 gap-6 items-start">
+                  <label className="col-span-2 text-sm text-right text-gray-500 pt-1"><span className="text-red-500 mr-1">*</span>补发规则</label>
+                  <div className="col-span-10 space-y-4">
+                    <div className="flex items-center space-x-8">
+                      <label className="flex items-center cursor-pointer group">
+                        <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center mr-2 group-hover:border-blue-500">
+                          {formData.rebateRule === '按超额分段补发' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                        </div>
+                        <input type="radio" className="hidden" checked={formData.rebateRule === '按超额分段补发'} onChange={() => setFormData({...formData, rebateRule: '按超额分段补发'})} />
+                        <span className="text-sm text-gray-700">按超额分段补发</span>
+                        <button className="ml-2 text-blue-600 text-xs">查看案例</button>
+                      </label>
+                      <label className="flex items-center cursor-pointer group">
+                        <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center mr-2 group-hover:border-blue-500">
+                          {formData.rebateRule === '超额按最高补发' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                        </div>
+                        <input type="radio" className="hidden" checked={formData.rebateRule === '超额按最高补发'} onChange={() => setFormData({...formData, rebateRule: '超额按最高补发'})} />
+                        <span className="text-sm text-gray-700">超额按最高补发</span>
+                        <button className="ml-2 text-blue-600 text-xs">查看案例</button>
+                      </label>
+                      <label className="flex items-center cursor-pointer group">
+                        <div className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center mr-2 group-hover:border-blue-500">
+                          {formData.rebateRule === '所有销售量按最高补发' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                        </div>
+                        <input type="radio" className="hidden" checked={formData.rebateRule === '所有销售量按最高补发'} onChange={() => setFormData({...formData, rebateRule: '所有销售量按最高补发'})} />
+                        <span className="text-sm text-gray-700">所有销售量按最高补发</span>
+                        <button className="ml-2 text-blue-600 text-xs">查看案例</button>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 奖励保护期 */}
+                <div className="grid grid-cols-12 gap-6 items-center">
+                  <label className="col-span-2 text-sm text-right text-gray-500">奖励保护期</label>
+                  <div className="col-span-4">
+                    <div className="relative">
+                      <select 
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm appearance-none bg-white focus:border-blue-500 outline-none"
+                        value={formData.rewardProtectionPeriod}
+                        onChange={(e) => setFormData({...formData, rewardProtectionPeriod: Number(e.target.value)})}
+                      >
+                        <option value={0}>0</option>
+                        <option value={7}>7</option>
+                        <option value={15}>15</option>
+                        <option value={30}>30</option>
+                      </select>
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-12 gap-6 -mt-4">
+                  <div className="col-span-2" />
+                  <div className="col-span-10 text-[11px] text-gray-400">
+                    我们将在2027-12-31 23:59:59，发放达成后补发的固定奖励，且不会对退单/补发做重复计算。
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* 活动时间 */}
+            <div className="grid grid-cols-12 gap-6 items-center">
+              <label className="col-span-2 text-sm text-right text-gray-500"><span className="text-red-500 mr-1">*</span>活动时间</label>
+              <div className="col-span-10 flex items-center space-x-2">
+                {formData.associatedTarget ? (
+                  <div className="text-sm text-gray-700 flex items-center">
+                    <span className="font-medium mr-4">{formData.startTime} - {formData.endTime}</span>
+                    <span className="text-gray-400 text-xs">您选择了任务，活动时间已自动获取为目标时间，如需修改时间，请前往 <button className="text-blue-600 hover:underline">目标管理</button></span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 w-full max-w-lg">
+                    <div className="relative flex-1">
+                      <input 
+                        type="date" 
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-blue-500 outline-none" 
+                        value={formData.startTime}
+                        onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                      />
+                    </div>
+                    <span className="text-gray-400">至</span>
+                    <div className="relative flex-1">
+                      <input 
+                        type="date" 
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-blue-500 outline-none" 
+                        value={formData.endTime}
+                        onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 活动封面 */}
+            <div className="grid grid-cols-12 gap-6 items-start">
+              <label className="col-span-2 text-sm text-right text-gray-500 pt-2">活动封面</label>
+              <div className="col-span-10">
+                <div className="w-36 h-28 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-blue-400 hover:bg-gray-50 transition-colors">
+                  <Plus size={32} strokeWidth={1.5} />
+                </div>
+                <p className="text-[11px] text-gray-400 mt-2">建议240*160px，格式PNG，JPG，JPEG不超过2M</p>
+              </div>
+            </div>
+
+            {/* 活动简介 */}
+            <div className="grid grid-cols-12 gap-6 items-start">
+              <label className="col-span-2 text-sm text-right text-gray-500 pt-2"><span className="text-red-500 mr-1">*</span>活动简介</label>
+              <div className="col-span-8 relative">
+                <textarea 
+                  className="w-full h-24 border border-gray-300 rounded px-3 py-2 text-sm focus:border-blue-500 outline-none resize-none" 
+                  maxLength={300}
+                  placeholder="请输入"
+                  value={formData.activityIntro}
+                  onChange={(e) => setFormData({...formData, activityIntro: e.target.value})}
+                ></textarea>
+                <span className="absolute right-3 bottom-2 text-xs text-gray-400">{formData.activityIntro.length}/300</span>
+              </div>
+            </div>
+
+            <div className="pt-8 border-t border-gray-100 flex items-center justify-center space-x-4">
+              <button className="px-10 py-2.5 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 transition-colors">仅保存</button>
+              <button onClick={() => setStep(2)} className="px-10 py-2.5 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">保存并下一步</button>
             </div>
           </div>
+        ) : step === 2 ? (
+          <div className="w-full max-w-6xl space-y-4">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+               <div className="flex justify-between items-start mb-6">
+                 <div>
+                   <h1 className="text-xl font-bold text-gray-800 flex items-center">
+                     {formData.activityTitle || '阿斯顿发史蒂夫'}
+                     <span className="ml-3 px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-normal rounded">草稿</span>
+                     <span className="ml-2 px-2 py-0.5 bg-orange-50 text-orange-500 text-xs font-normal rounded">代建</span>
+                   </h1>
+                   <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[12px] text-gray-500">
+                     <span>活动ID：635739</span>
+                     <span className="text-gray-300">|</span>
+                     <span>活动时间：{formData.startTime || '2027-01-01'} 至 {formData.endTime || '2027-12-31'}</span>
+                     <span className="text-gray-300">|</span>
+                     <span>扣费模式：激励扣连锁 服务费扣连锁</span>
+                     <span className="text-gray-300">|</span>
+                     <span>激励计算：按商品数量</span>
+                     <span className="text-gray-300">|</span>
+                     <span>激励发放：按固定金额</span>
+                     <span className="text-gray-300">|</span>
+                     <span>奖励保护期：0天</span>
+                     <span className="text-gray-300">|</span>
+                     <span>关联目标：{formData.associatedTarget || '0527测试'}</span>
+                   </div>
+                 </div>
+                 <div className="flex space-x-3">
+                   <button className="px-5 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors">发布活动</button>
+                   <button className="px-5 py-2 border border-blue-500 text-blue-600 rounded text-sm font-medium hover:bg-blue-50 transition-colors">更多操作</button>
+                 </div>
+               </div>
 
-          <table className="w-full border-collapse border border-gray-200 text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="p-3 border border-gray-200 text-left">商品信息</th>
-                <th className="p-3 border border-gray-200 text-left">激励政策</th>
-                <th className="p-3 border border-gray-200 text-left">更新时间</th>
-                <th className="p-3 border border-gray-200 text-left">营销政策</th>
-                <th className="p-3 border border-gray-200 text-left">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {policies.length > 0 ? policies.map((p, idx) => (
-                <tr key={idx}>
-                  <td className="p-3 border border-gray-200">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gray-100 rounded flex-shrink-0" />
-                      <div>
-                        <div className="font-bold text-gray-800">示例商品 {idx + 1}</div>
-                        <div className="text-xs text-gray-400">编码: SKU00{idx + 1}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3 border border-gray-200">
-                    <div className="text-xs space-y-1">
-                      <div>激励计算: 按商品数量</div>
-                      <div>门槛: 毛利率 ≥ 30%</div>
-                      <div>奖励: 店员 5元/件</div>
-                    </div>
-                  </td>
-                  <td className="p-3 border border-gray-200 text-xs text-gray-500">2026-05-13 10:00:00</td>
-                  <td className="p-3 border border-gray-200 text-xs text-blue-600 cursor-pointer hover:underline">查看政策</td>
-                  <td className="p-3 border border-gray-200">
-                    <button className="text-blue-600 text-xs mr-2">编辑</button>
-                    <button className="text-red-500 text-xs">删除</button>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-400">暂无数据</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+               <div className="mt-8">
+                 <h2 className="text-sm font-bold text-gray-800 mb-4">目标单品激励</h2>
+                 <div className="bg-orange-50 border border-orange-100 p-3 rounded flex items-center text-xs text-orange-600 mb-6">
+                   <div className="w-4 h-4 rounded-full border border-orange-400 flex items-center justify-center mr-2 shrink-0">!</div>
+                   提示：目标单品激励与其他激励属于并行奖励，不受其他任何激励政策影响
+                 </div>
 
-          {showPolicyModal && (
-            <SingleProductIncentiveModal 
-              onClose={() => setShowPolicyModal(false)}
-              onSave={(policy) => {
-                setPolicies([...policies, policy]);
-                setShowPolicyModal(false);
-              }}
-            />
-          )}
+                 <div className="flex justify-between items-center mb-4">
+                   <div className="flex space-x-6">
+                     <button 
+                       onClick={() => setShowTargetProductModal(true)}
+                       className="text-blue-600 text-sm flex items-center hover:underline"
+                     >
+                       <Plus size={16} className="mr-1" /> 添加目标单品激励
+                     </button>
+                     <button className="text-blue-600 text-sm flex items-center hover:underline">
+                       <Trash2 size={16} className="mr-1" /> 批量删除
+                     </button>
+                   </div>
+                   <div className="flex items-center space-x-2">
+                     <div className="flex items-center border border-gray-300 rounded overflow-hidden">
+                       <select className="bg-gray-50 px-2 py-1.5 text-xs border-r border-gray-300 outline-none">
+                         <option>商品编码</option>
+                       </select>
+                       <input type="text" placeholder="请输入商品编码" className="px-3 py-1.5 text-xs w-48 outline-none" />
+                       <button className="px-3 text-gray-400"><Search size={14} /></button>
+                     </div>
+                   </div>
+                 </div>
 
-          <div className="mt-8 flex justify-end space-x-4">
-            <button onClick={() => setStep(1)} className="px-6 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-50">上一步</button>
-            <button onClick={() => setStep(3)} className="px-6 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">下一步</button>
+                 <table className="w-full border-collapse">
+                   <thead>
+                     <tr className="bg-gray-50 border-y border-gray-200">
+                       <th className="p-3 w-10"><input type="checkbox" className="rounded border-gray-300" /></th>
+                       <th className="p-3 text-left text-xs font-bold text-gray-600">商品信息</th>
+                       <th className="p-3 text-left text-xs font-bold text-gray-600">激励政策</th>
+                       <th className="p-3 text-left text-xs font-bold text-gray-600">更新时间</th>
+                       <th className="p-3 text-center text-xs font-bold text-gray-600">操作</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     <tr>
+                       <td colSpan={5} className="p-12 text-center">
+                         <div className="flex flex-col items-center justify-center text-gray-400">
+                           <div className="text-sm">暂无数据</div>
+                         </div>
+                       </td>
+                     </tr>
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+
+            <div className="flex justify-end space-x-4">
+              <button onClick={() => setStep(1)} className="px-10 py-2.5 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 transition-colors bg-white">上一步</button>
+              <button onClick={() => setStep(3)} className="px-10 py-2.5 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">下一步</button>
+            </div>
           </div>
-        </div>
-      ) : step === 3 ? (
+        ) : step === 3 ? (
+
         <div className="p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">活动商品</h3>
           <p className="text-gray-500">商品选择页面开发中...</p>
@@ -7461,6 +7996,7 @@ function CreateActivityView({ onBack }: { onBack: () => void }) {
           </div>
         </div>
       ) : null}
+      </div>
     </div>
   );
 }
