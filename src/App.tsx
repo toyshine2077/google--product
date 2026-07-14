@@ -7016,13 +7016,74 @@ const EmployeeUsageView = () => {
 const ManufacturerDimensionView = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
+  const [selectedMfr, setSelectedMfr] = useState<any>(null);
   
   const manufacturers = [
-    { code: 'MFR001', name: '阿斯利康制药', startTime: '2026-01-01', endTime: '2026-12-31', varieties: 12, momChange: 15230, momRate: 15.2, yoyChange: 24500, yoyRate: 25.4 },
-    { code: 'MFR002', name: '辉瑞投资', startTime: '2026-02-15', endTime: '2026-08-15', varieties: 8, momChange: -5420, momRate: -8.5, yoyChange: 12000, yoyRate: 12.1 },
-    { code: 'MFR003', name: '赛诺菲(中国)', startTime: '2026-03-01', endTime: '2026-09-30', varieties: 15, momChange: 8900, momRate: 10.2, yoyChange: -3200, yoyRate: -4.5 },
-    { code: 'MFR004', name: '葛兰素史克', startTime: '2026-01-01', endTime: '2026-06-30', varieties: 6, momChange: 1240, momRate: 2.1, yoyChange: 5600, yoyRate: 8.9 },
-    { code: 'MFR005', name: '礼来(中国)', startTime: '2026-04-01', endTime: '2026-12-31', varieties: 10, momChange: 0, momRate: 0, yoyChange: 0, yoyRate: 0 },
+    { 
+      code: 'MFR001', 
+      name: '阿斯利康制药', 
+      varieties: 12, 
+      currSales: 152300, 
+      prevSales: 132000, 
+      currGP: 45600, 
+      prevGP: 38200,
+      momRate: 15.4, 
+      yoyRate: 25.4 
+    },
+    { 
+      code: 'MFR002', 
+      name: '辉瑞投资', 
+      varieties: 8, 
+      currSales: 98000, 
+      prevSales: 105420, 
+      currGP: 28400, 
+      prevGP: 31200,
+      momRate: -7.0, 
+      yoyRate: 12.1 
+    },
+    { 
+      code: 'MFR003', 
+      name: '赛诺菲(中国)', 
+      varieties: 15, 
+      currSales: 112000, 
+      prevSales: 103100, 
+      currGP: 32500, 
+      prevGP: 29800,
+      momRate: 8.6, 
+      yoyRate: -4.5 
+    },
+    { 
+      code: 'MFR004', 
+      name: '葛兰素史克', 
+      varieties: 6, 
+      currSales: 65400, 
+      prevSales: 64160, 
+      currGP: 18200, 
+      prevGP: 17500,
+      momRate: 1.9, 
+      yoyRate: 8.9 
+    },
+    { 
+      code: 'MFR005', 
+      name: '礼来(中国)', 
+      varieties: 10, 
+      currSales: 88500, 
+      prevSales: 88500, 
+      currGP: 24300, 
+      prevGP: 24300,
+      momRate: 0, 
+      yoyRate: 0 
+    },
+  ];
+
+  const productVarieties = [
+    { code: 'PROD001', name: '阿司匹林肠溶片', mfrName: '阿斯利康制药', activity: '年度心血管关怀活动', startTime: '2026-01-01', endTime: '2026-12-31', momRate: 12.5, yoyRate: 18.2 },
+    { code: 'PROD001', name: '阿司匹林肠溶片', mfrName: '阿斯利康制药', activity: 'Q2慢病药惠享季', startTime: '2026-04-01', endTime: '2026-06-30', momRate: 12.5, yoyRate: 18.2 },
+    { code: 'PROD002', name: '阿托伐他汀钙片', mfrName: '辉瑞投资', activity: '降脂健康月', startTime: '2026-02-15', endTime: '2026-08-15', momRate: -5.2, yoyRate: 10.5 },
+    { code: 'PROD003', name: '甘精胰岛素注射液', mfrName: '赛诺菲(中国)', activity: '糖尿病综合管理方案', startTime: '2026-03-01', endTime: '2026-09-30', momRate: 8.4, yoyRate: -2.1 },
+    { code: 'PROD004', name: '舒利迭吸入剂', mfrName: '葛兰素史克', activity: '呼吸健康专项激励', startTime: '2026-01-01', endTime: '2026-06-30', momRate: 1.5, yoyRate: 6.8 },
+    { code: 'PROD005', name: '度拉糖肽注射液', mfrName: '礼来(中国)', activity: 'GLP-1新品推广活动', startTime: '2026-04-01', endTime: '2026-12-31', momRate: 0, yoyRate: 0 },
+    { code: 'PROD006', name: '布地奈德吸入粉雾剂', mfrName: '阿斯利康制药', activity: '哮喘规范治疗项目', startTime: '2026-01-01', endTime: '2026-06-30', momRate: 15.8, yoyRate: 22.4 },
   ];
 
   const metrics = [
@@ -7033,9 +7094,20 @@ const ManufacturerDimensionView = () => {
   ];
 
   const handleMetricClick = (metric: any) => {
-    setModalTitle(metric.detail);
+    setSelectedMfr(null);
+    setModalTitle(metric.detail || metric);
     setShowDetailModal(true);
   };
+
+  const handleMfrVarietiesClick = (mfr: any) => {
+    setSelectedMfr(mfr);
+    setModalTitle(`${mfr.name} - 品种明细`);
+    setShowDetailModal(true);
+  };
+
+  const filteredProducts = selectedMfr 
+    ? productVarieties.filter(p => p.mfrName === selectedMfr.name)
+    : productVarieties;
 
   return (
     <motion.div 
@@ -7068,25 +7140,25 @@ const ManufacturerDimensionView = () => {
 
       {/* Main Table */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-          <h3 className="font-bold text-gray-800 text-sm">核心报表</h3>
+        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
+          <div className="flex items-center space-x-4">
+            <h3 className="font-bold text-gray-800 text-sm">核心报表</h3>
+          </div>
           <button className="text-blue-600 text-xs hover:underline flex items-center">
             <Download size={14} className="mr-1" /> 导出报表
           </button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs whitespace-nowrap">
             <thead className="bg-gray-50 text-gray-500 font-medium">
               <tr>
                 <th className="px-4 py-3">厂家编码</th>
                 <th className="px-4 py-3">厂家名称</th>
-                <th className="px-4 py-3">活动开始时间</th>
-                <th className="px-4 py-3">活动结束时间</th>
                 <th className="px-4 py-3 text-center">活动品种</th>
-                <th className="px-4 py-3 text-right">销售环比变化</th>
-                <th className="px-4 py-3 text-right">环比增长率</th>
-                <th className="px-4 py-3 text-right">销售同比变化</th>
-                <th className="px-4 py-3 text-right">同比增长率</th>
+                <th className="px-4 py-3 text-right">本期销售</th>
+                <th className="px-4 py-3 text-right">上期销售</th>
+                <th className="px-4 py-3 text-right">环比比例</th>
+                <th className="px-4 py-3 text-right">同比比例</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -7094,22 +7166,25 @@ const ManufacturerDimensionView = () => {
                 <tr key={idx} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 text-gray-400">{mfr.code}</td>
                   <td className="px-4 py-3 font-medium text-gray-800">{mfr.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{mfr.startTime}</td>
-                  <td className="px-4 py-3 text-gray-500">{mfr.endTime}</td>
                   <td className="px-4 py-3 text-center">
-                    <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{mfr.varieties}</span>
+                    <button 
+                      onClick={() => handleMfrVarietiesClick(mfr)}
+                      className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full hover:bg-blue-100 transition-colors"
+                    >
+                      {mfr.varieties}
+                    </button>
                   </td>
-                  <td className={`px-4 py-3 text-right ${mfr.momChange >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                    {mfr.momChange >= 0 ? '+' : ''}{mfr.momChange.toLocaleString()}
+                  <td className="px-4 py-3 text-right font-mono">
+                    {mfr.currSales.toLocaleString()}
                   </td>
-                  <td className={`px-4 py-3 text-right ${mfr.momRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                    {mfr.momRate >= 0 ? '+' : ''}{mfr.momRate}%
+                  <td className="px-4 py-3 text-right font-mono text-gray-500">
+                    {mfr.prevSales.toLocaleString()}
                   </td>
-                  <td className={`px-4 py-3 text-right ${mfr.yoyChange >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                    {mfr.yoyChange >= 0 ? '+' : ''}{mfr.yoyChange.toLocaleString()}
+                  <td className={`px-4 py-3 text-right font-medium ${mfr.momRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {mfr.momRate >= 0 ? '↑' : '↓'} {Math.abs(mfr.momRate)}%
                   </td>
-                  <td className={`px-4 py-3 text-right ${mfr.yoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                    {mfr.yoyRate >= 0 ? '+' : ''}{mfr.yoyRate}%
+                  <td className={`px-4 py-3 text-right font-medium ${mfr.yoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {mfr.yoyRate >= 0 ? '↑' : '↓'} {Math.abs(mfr.yoyRate)}%
                   </td>
                 </tr>
               ))}
@@ -7124,7 +7199,7 @@ const ManufacturerDimensionView = () => {
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[85vh] flex flex-col"
+            className="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[85vh] flex flex-col"
           >
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
               <h3 className="text-lg font-bold text-gray-800">{modalTitle}</h3>
@@ -7133,32 +7208,68 @@ const ManufacturerDimensionView = () => {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
-               <table className="w-full text-left text-xs border border-gray-100 rounded-lg">
-                <thead className="bg-gray-50 text-gray-500 font-medium">
-                  <tr>
-                    <th className="px-4 py-3 border-b">厂家编码</th>
-                    <th className="px-4 py-3 border-b">厂家名称</th>
-                    <th className="px-4 py-3 border-b text-center">活动品种</th>
-                    <th className="px-4 py-3 border-b text-right">环比增长率</th>
-                    <th className="px-4 py-3 border-b text-right">同比增长率</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {manufacturers.slice(0, 8).map((mfr, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-gray-400">{mfr.code}</td>
-                      <td className="px-4 py-3 font-medium text-gray-800">{mfr.name}</td>
-                      <td className="px-4 py-3 text-center">{mfr.varieties}</td>
-                      <td className={`px-4 py-3 text-right ${mfr.momRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                        {mfr.momRate}%
-                      </td>
-                      <td className={`px-4 py-3 text-right ${mfr.yoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                        {mfr.yoyRate}%
-                      </td>
+              {modalTitle.includes('品种明细') ? (
+                <table className="w-full text-left text-xs border border-gray-100 rounded-lg">
+                  <thead className="bg-gray-50 text-gray-500 font-medium sticky top-0 z-10">
+                    <tr>
+                      <th className="px-4 py-3 border-b">商品编码</th>
+                      <th className="px-4 py-3 border-b">商品名称</th>
+                      <th className="px-4 py-3 border-b">厂家名称</th>
+                      <th className="px-4 py-3 border-b">厂家活动</th>
+                      <th className="px-4 py-3 border-b text-right">商品销量环比</th>
+                      <th className="px-4 py-3 border-b text-right">销量同比</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {filteredProducts.map((prod, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 text-gray-400">{prod.code}</td>
+                        <td className="px-4 py-3 font-medium text-gray-800">{prod.name}</td>
+                        <td className="px-4 py-3 text-gray-600">{prod.mfrName}</td>
+                        <td className="px-4 py-3 text-gray-500">
+                          <div className="flex flex-col space-y-1">
+                            <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] w-fit font-medium">{prod.activity}</span>
+                            <span className="text-[10px] text-gray-400">{prod.startTime} 至 {prod.endTime}</span>
+                          </div>
+                        </td>
+                        <td className={`px-4 py-3 text-right ${prod.momRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                          {prod.momRate > 0 ? '+' : ''}{prod.momRate}%
+                        </td>
+                        <td className={`px-4 py-3 text-right ${prod.yoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                          {prod.yoyRate > 0 ? '+' : ''}{prod.yoyRate}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <table className="w-full text-left text-xs border border-gray-100 rounded-lg">
+                  <thead className="bg-gray-50 text-gray-500 font-medium">
+                    <tr>
+                      <th className="px-4 py-3 border-b">厂家编码</th>
+                      <th className="px-4 py-3 border-b">厂家名称</th>
+                      <th className="px-4 py-3 border-b text-center">活动品种</th>
+                      <th className="px-4 py-3 border-b text-right">环比增长率</th>
+                      <th className="px-4 py-3 border-b text-right">同比增长率</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {manufacturers.slice(0, 8).map((mfr, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 text-gray-400">{mfr.code}</td>
+                        <td className="px-4 py-3 font-medium text-gray-800">{mfr.name}</td>
+                        <td className="px-4 py-3 text-center">{mfr.varieties}</td>
+                        <td className={`px-4 py-3 text-right ${mfr.momRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                          {mfr.momRate}%
+                        </td>
+                        <td className={`px-4 py-3 text-right ${mfr.yoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                          {mfr.yoyRate}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
             <div className="px-6 py-4 border-t border-gray-100 flex justify-end bg-gray-50 rounded-b-xl">
               <button 
