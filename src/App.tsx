@@ -7023,67 +7023,116 @@ const ManufacturerDimensionView = () => {
       code: 'MFR001', 
       name: '阿斯利康制药', 
       varieties: 12, 
-      currSales: 152300, 
-      prevSales: 132000, 
-      currGP: 45600, 
-      prevGP: 38200,
-      momRate: 15.4, 
-      yoyRate: 25.4 
+      currQty: 5230,
+      prevQtyMom: 4540,
+      qtyMomRate: 15.2,
+      prevQtyYoy: 4170,
+      qtyYoyRate: 25.4,
+      currAmt: 152300, 
+      prevAmtMom: 132000, 
+      amtMomRate: 15.4,
+      prevAmtYoy: 121400,
+      amtYoyRate: 25.4 
     },
     { 
       code: 'MFR002', 
       name: '辉瑞投资', 
       varieties: 8, 
-      currSales: 98000, 
-      prevSales: 105420, 
-      currGP: 28400, 
-      prevGP: 31200,
-      momRate: -7.0, 
-      yoyRate: 12.1 
+      currQty: 3420,
+      prevQtyMom: 3680,
+      qtyMomRate: -7.1,
+      prevQtyYoy: 3050,
+      qtyYoyRate: 12.1,
+      currAmt: 98000, 
+      prevAmtMom: 105420, 
+      amtMomRate: -7.0,
+      prevAmtYoy: 87400,
+      amtYoyRate: 12.1 
     },
     { 
       code: 'MFR003', 
       name: '赛诺菲(中国)', 
       varieties: 15, 
-      currSales: 112000, 
-      prevSales: 103100, 
-      currGP: 32500, 
-      prevGP: 29800,
-      momRate: 8.6, 
-      yoyRate: -4.5 
+      currQty: 4120,
+      prevQtyMom: 3790,
+      qtyMomRate: 8.7,
+      prevQtyYoy: 4310,
+      qtyYoyRate: -4.4,
+      currAmt: 112000, 
+      prevAmtMom: 103100, 
+      amtMomRate: 8.6,
+      prevAmtYoy: 117300,
+      amtYoyRate: -4.5 
     },
     { 
       code: 'MFR004', 
       name: '葛兰素史克', 
       varieties: 6, 
-      currSales: 65400, 
-      prevSales: 64160, 
-      currGP: 18200, 
-      prevGP: 17500,
-      momRate: 1.9, 
-      yoyRate: 8.9 
+      currQty: 2150,
+      prevQtyMom: 2110,
+      qtyMomRate: 1.9,
+      prevQtyYoy: 1970,
+      qtyYoyRate: 9.1,
+      currAmt: 65400, 
+      prevAmtMom: 64160, 
+      amtMomRate: 1.9,
+      prevAmtYoy: 60050,
+      amtYoyRate: 8.9 
     },
     { 
       code: 'MFR005', 
       name: '礼来(中国)', 
       varieties: 10, 
-      currSales: 88500, 
-      prevSales: 88500, 
-      currGP: 24300, 
-      prevGP: 24300,
-      momRate: 0, 
-      yoyRate: 0 
+      currQty: 2880,
+      prevQtyMom: 2880,
+      qtyMomRate: 0,
+      prevQtyYoy: 2880,
+      qtyYoyRate: 0,
+      currAmt: 88500, 
+      prevAmtMom: 88500, 
+      amtMomRate: 0,
+      prevAmtYoy: 88500,
+      amtYoyRate: 0 
     },
   ];
 
   const productVarieties = [
-    { code: 'PROD001', name: '阿司匹林肠溶片', mfrName: '阿斯利康制药', activity: '年度心血管关怀活动', startTime: '2026-01-01', endTime: '2026-12-31', momRate: 12.5, yoyRate: 18.2 },
-    { code: 'PROD001', name: '阿司匹林肠溶片', mfrName: '阿斯利康制药', activity: 'Q2慢病药惠享季', startTime: '2026-04-01', endTime: '2026-06-30', momRate: 12.5, yoyRate: 18.2 },
-    { code: 'PROD002', name: '阿托伐他汀钙片', mfrName: '辉瑞投资', activity: '降脂健康月', startTime: '2026-02-15', endTime: '2026-08-15', momRate: -5.2, yoyRate: 10.5 },
-    { code: 'PROD003', name: '甘精胰岛素注射液', mfrName: '赛诺菲(中国)', activity: '糖尿病综合管理方案', startTime: '2026-03-01', endTime: '2026-09-30', momRate: 8.4, yoyRate: -2.1 },
-    { code: 'PROD004', name: '舒利迭吸入剂', mfrName: '葛兰素史克', activity: '呼吸健康专项激励', startTime: '2026-01-01', endTime: '2026-06-30', momRate: 1.5, yoyRate: 6.8 },
-    { code: 'PROD005', name: '度拉糖肽注射液', mfrName: '礼来(中国)', activity: 'GLP-1新品推广活动', startTime: '2026-04-01', endTime: '2026-12-31', momRate: 0, yoyRate: 0 },
-    { code: 'PROD006', name: '布地奈德吸入粉雾剂', mfrName: '阿斯利康制药', activity: '哮喘规范治疗项目', startTime: '2026-01-01', endTime: '2026-06-30', momRate: 15.8, yoyRate: 22.4 },
+    { 
+      code: 'PROD001', 
+      name: '阿司匹林肠溶片', 
+      mfrName: '阿斯利康制药', 
+      activity: '年度心血管关怀活动', 
+      startTime: '2026-01-01', 
+      endTime: '2026-12-31', 
+      currQty: 1250,
+      prevQtyMom: 1100,
+      qtyMomRate: 13.6,
+      prevQtyYoy: 1050,
+      qtyYoyRate: 19.0,
+      currAmt: 37500,
+      prevAmtMom: 33000,
+      amtMomRate: 13.6,
+      prevAmtYoy: 31500,
+      amtYoyRate: 19.0
+    },
+    { 
+      code: 'PROD002', 
+      name: '阿托伐他汀钙片', 
+      mfrName: '辉瑞投资', 
+      activity: '降脂健康月', 
+      startTime: '2026-02-15', 
+      endTime: '2026-08-15', 
+      currQty: 850,
+      prevQtyMom: 920,
+      qtyMomRate: -7.6,
+      prevQtyYoy: 780,
+      qtyYoyRate: 9.0,
+      currAmt: 42500,
+      prevAmtMom: 46000,
+      amtMomRate: -7.6,
+      prevAmtYoy: 39000,
+      amtYoyRate: 9.0
+    },
   ];
 
   const metrics = [
@@ -7154,11 +7203,13 @@ const ManufacturerDimensionView = () => {
               <tr>
                 <th className="px-4 py-3">厂家编码</th>
                 <th className="px-4 py-3">厂家名称</th>
-                <th className="px-4 py-3 text-center">活动品种</th>
-                <th className="px-4 py-3 text-right">本期销售</th>
-                <th className="px-4 py-3 text-right">上期销售</th>
-                <th className="px-4 py-3 text-right">环比比例</th>
-                <th className="px-4 py-3 text-right">同比比例</th>
+                <th className="px-4 py-3 text-center">活动品种数</th>
+                <th className="px-4 py-3 text-right">本期销售数量</th>
+                <th className="px-4 py-3 text-right">销量环比</th>
+                <th className="px-4 py-3 text-right">销量同比</th>
+                <th className="px-4 py-3 text-right">本期销售金额</th>
+                <th className="px-4 py-3 text-right">金额环比</th>
+                <th className="px-4 py-3 text-right">金额同比</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -7174,17 +7225,43 @@ const ManufacturerDimensionView = () => {
                       {mfr.varieties}
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-right font-mono">
-                    {mfr.currSales.toLocaleString()}
+                  <td className="px-4 py-3 text-right font-mono font-medium">
+                    {mfr.currQty.toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-500">
-                    {mfr.prevSales.toLocaleString()}
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 font-mono scale-90 origin-right">{mfr.prevQtyMom.toLocaleString()}</span>
+                      <span className={`font-medium ${mfr.qtyMomRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        {mfr.qtyMomRate >= 0 ? '↑' : '↓'} {Math.abs(mfr.qtyMomRate)}%
+                      </span>
+                    </div>
                   </td>
-                  <td className={`px-4 py-3 text-right font-medium ${mfr.momRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                    {mfr.momRate >= 0 ? '↑' : '↓'} {Math.abs(mfr.momRate)}%
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 font-mono scale-90 origin-right">{mfr.prevQtyYoy.toLocaleString()}</span>
+                      <span className={`font-medium ${mfr.qtyYoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        {mfr.qtyYoyRate >= 0 ? '↑' : '↓'} {Math.abs(mfr.qtyYoyRate)}%
+                      </span>
+                    </div>
                   </td>
-                  <td className={`px-4 py-3 text-right font-medium ${mfr.yoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                    {mfr.yoyRate >= 0 ? '↑' : '↓'} {Math.abs(mfr.yoyRate)}%
+                  <td className="px-4 py-3 text-right font-mono font-medium text-blue-600">
+                    {mfr.currAmt.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 font-mono scale-90 origin-right">{mfr.prevAmtMom.toLocaleString()}</span>
+                      <span className={`font-medium ${mfr.amtMomRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        {mfr.amtMomRate >= 0 ? '↑' : '↓'} {Math.abs(mfr.amtMomRate)}%
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 font-mono scale-90 origin-right">{mfr.prevAmtYoy.toLocaleString()}</span>
+                      <span className={`font-medium ${mfr.amtYoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        {mfr.amtYoyRate >= 0 ? '↑' : '↓'} {Math.abs(mfr.amtYoyRate)}%
+                      </span>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -7209,39 +7286,77 @@ const ManufacturerDimensionView = () => {
             </div>
             <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
               {modalTitle.includes('品种明细') ? (
-                <table className="w-full text-left text-xs border border-gray-100 rounded-lg">
-                  <thead className="bg-gray-50 text-gray-500 font-medium sticky top-0 z-10">
-                    <tr>
-                      <th className="px-4 py-3 border-b">商品编码</th>
-                      <th className="px-4 py-3 border-b">商品名称</th>
-                      <th className="px-4 py-3 border-b">厂家名称</th>
-                      <th className="px-4 py-3 border-b">厂家活动</th>
-                      <th className="px-4 py-3 border-b text-right">商品销量环比</th>
-                      <th className="px-4 py-3 border-b text-right">销量同比</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {filteredProducts.map((prod, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-gray-400">{prod.code}</td>
-                        <td className="px-4 py-3 font-medium text-gray-800">{prod.name}</td>
-                        <td className="px-4 py-3 text-gray-600">{prod.mfrName}</td>
-                        <td className="px-4 py-3 text-gray-500">
-                          <div className="flex flex-col space-y-1">
-                            <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] w-fit font-medium">{prod.activity}</span>
-                            <span className="text-[10px] text-gray-400">{prod.startTime} 至 {prod.endTime}</span>
-                          </div>
-                        </td>
-                        <td className={`px-4 py-3 text-right ${prod.momRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                          {prod.momRate > 0 ? '+' : ''}{prod.momRate}%
-                        </td>
-                        <td className={`px-4 py-3 text-right ${prod.yoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                          {prod.yoyRate > 0 ? '+' : ''}{prod.yoyRate}%
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border border-gray-100 rounded-lg whitespace-nowrap">
+                    <thead className="bg-gray-50 text-gray-500 font-medium sticky top-0 z-10">
+                      <tr>
+                        <th className="px-4 py-3 border-b">商品编码</th>
+                        <th className="px-4 py-3 border-b">商品名称</th>
+                        <th className="px-4 py-3 border-b">厂家名称</th>
+                        <th className="px-4 py-3 border-b">厂家活动及活动时间</th>
+                        <th className="px-4 py-3 border-b text-right">本期销售数量</th>
+                        <th className="px-4 py-3 border-b text-right">销量环比</th>
+                        <th className="px-4 py-3 border-b text-right">销量同比</th>
+                        <th className="px-4 py-3 border-b text-right">本期销售金额</th>
+                        <th className="px-4 py-3 border-b text-right">金额环比</th>
+                        <th className="px-4 py-3 border-b text-right">金额同比</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {filteredProducts.map((prod, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3 text-gray-400">{prod.code}</td>
+                          <td className="px-4 py-3 font-medium text-gray-800">{prod.name}</td>
+                          <td className="px-4 py-3 text-gray-600">{prod.mfrName}</td>
+                          <td className="px-4 py-3 text-gray-500">
+                            <div className="flex flex-col space-y-1">
+                              <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] w-fit font-medium">{prod.activity}</span>
+                              <span className="text-[10px] text-gray-400">{prod.startTime} 至 {prod.endTime}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono font-medium">
+                            {prod.currQty.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex flex-col">
+                              <span className="text-gray-400 font-mono scale-90 origin-right">{prod.prevQtyMom.toLocaleString()}</span>
+                              <span className={`font-medium ${prod.qtyMomRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                {prod.qtyMomRate >= 0 ? '↑' : '↓'} {Math.abs(prod.qtyMomRate)}%
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex flex-col">
+                              <span className="text-gray-400 font-mono scale-90 origin-right">{prod.prevQtyYoy.toLocaleString()}</span>
+                              <span className={`font-medium ${prod.qtyYoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                {prod.qtyYoyRate >= 0 ? '↑' : '↓'} {Math.abs(prod.qtyYoyRate)}%
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono font-medium text-blue-600">
+                            {prod.currAmt.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex flex-col">
+                              <span className="text-gray-400 font-mono scale-90 origin-right">{prod.prevAmtMom.toLocaleString()}</span>
+                              <span className={`font-medium ${prod.amtMomRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                {prod.amtMomRate >= 0 ? '↑' : '↓'} {Math.abs(prod.amtMomRate)}%
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex flex-col">
+                              <span className="text-gray-400 font-mono scale-90 origin-right">{prod.prevAmtYoy.toLocaleString()}</span>
+                              <span className={`font-medium ${prod.amtYoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                {prod.amtYoyRate >= 0 ? '↑' : '↓'} {Math.abs(prod.amtYoyRate)}%
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
                 <table className="w-full text-left text-xs border border-gray-100 rounded-lg">
                   <thead className="bg-gray-50 text-gray-500 font-medium">
@@ -7249,8 +7364,8 @@ const ManufacturerDimensionView = () => {
                       <th className="px-4 py-3 border-b">厂家编码</th>
                       <th className="px-4 py-3 border-b">厂家名称</th>
                       <th className="px-4 py-3 border-b text-center">活动品种</th>
-                      <th className="px-4 py-3 border-b text-right">环比增长率</th>
-                      <th className="px-4 py-3 border-b text-right">同比增长率</th>
+                      <th className="px-4 py-3 border-b text-right">销售额环比</th>
+                      <th className="px-4 py-3 border-b text-right">销售额同比</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -7259,11 +7374,11 @@ const ManufacturerDimensionView = () => {
                         <td className="px-4 py-3 text-gray-400">{mfr.code}</td>
                         <td className="px-4 py-3 font-medium text-gray-800">{mfr.name}</td>
                         <td className="px-4 py-3 text-center">{mfr.varieties}</td>
-                        <td className={`px-4 py-3 text-right ${mfr.momRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                          {mfr.momRate}%
+                        <td className={`px-4 py-3 text-right ${mfr.amtMomRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                          {mfr.amtMomRate}%
                         </td>
-                        <td className={`px-4 py-3 text-right ${mfr.yoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                          {mfr.yoyRate}%
+                        <td className={`px-4 py-3 text-right ${mfr.amtYoyRate >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                          {mfr.amtYoyRate}%
                         </td>
                       </tr>
                     ))}
